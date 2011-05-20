@@ -70,12 +70,12 @@ class BZip2HuffmanStageDecoder {
 	/**
 	 * The index of the current group within the selectors array
 	 */
-	private int groupIndex = 0;
+	private int groupIndex = -1;
 
 	/**
 	 * The byte position within the current group. A new group is selected every 50 decoded bytes
 	 */
-	private int groupPosition = 0;
+	private int groupPosition = -1;
 
 
 	/**
@@ -145,6 +145,11 @@ class BZip2HuffmanStageDecoder {
 
 		final BitInputStream bitInputStream = this.bitInputStream;
 
+		// Move to next group selector if required
+		if (((++this.groupPosition % BZip2Constants.HUFFMAN_GROUP_RUN_LENGTH) == 0)) {
+			this.currentTable = this.selectors[++this.groupIndex] & 0xff;
+		}
+
 		final int currentTable = this.currentTable;
 		final int[] tableLimits = this.codeLimits[currentTable];
 		int codeLength = this.minimumLengths[currentTable];
@@ -155,11 +160,6 @@ class BZip2HuffmanStageDecoder {
 		while (codeBits > tableLimits[codeLength]) {
 			codeLength++;
 			codeBits = (codeBits << 1) | bitInputStream.readBits (1);
-		}
-
-		// Move to next group selector if required
-		if ((++this.groupPosition % BZip2Constants.HUFFMAN_GROUP_RUN_LENGTH) == 0) {
-			this.currentTable = this.selectors[++this.groupIndex] & 0xff;
 		}
 
 		// Convert the code to a symbol index and return

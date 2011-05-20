@@ -64,11 +64,6 @@ public class BZip2InputStream extends InputStream {
 	private final boolean headerless;
 
 	/**
-	 * {@code true} if the stream header has been parsed, otherwise {@code false}
-	 */
-	private boolean streamInitialised = false;
-
-	/**
 	 * (@code true} if the end of the compressed stream has been reached, otherwise {@code false}
 	 */
 	private boolean streamComplete = false;
@@ -85,12 +80,12 @@ public class BZip2InputStream extends InputStream {
 	/**
 	 * The merged CRC of all blocks decompressed so far
 	 */
-	private int streamCRC;
+	private int streamCRC = 0;
 
 	/**
 	 * The decompressor for the current block
 	 */
-	private BZip2BlockDecompressor blockDecompressor;
+	private BZip2BlockDecompressor blockDecompressor = null;
 
 
 	/* (non-Javadoc)
@@ -100,7 +95,7 @@ public class BZip2InputStream extends InputStream {
 	public int read() throws IOException {
 
 		int nextByte = -1;
-		if (!this.streamInitialised) {
+		if (this.blockDecompressor == null) {
 			initialiseStream();
 		} else {
 			nextByte = this.blockDecompressor.read();
@@ -124,7 +119,7 @@ public class BZip2InputStream extends InputStream {
 	public int read (byte[] destination, int offset, int length) throws IOException {
 
 		int bytesRead = -1;
-		if (!this.streamInitialised) {
+		if (this.blockDecompressor == null) {
 			initialiseStream();
 		} else {
 			bytesRead = this.blockDecompressor.read (destination, offset, length);
@@ -148,7 +143,6 @@ public class BZip2InputStream extends InputStream {
 	public void close() throws IOException {
 
 		if (this.bitInputStream != null) {
-			this.streamInitialised = false;
 			this.streamComplete = true;
 			this.blockDecompressor = null;
 			this.bitInputStream = null;
@@ -174,7 +168,7 @@ public class BZip2InputStream extends InputStream {
 			throw new IOException ("Stream closed");
 		}
 
-		/* If the stream header has already failed to be parsed, don't retry */
+		/* If we're already at the end of the stream, do nothing */
 		if (this.streamComplete) {
 			return;
 		}
@@ -193,7 +187,6 @@ public class BZip2InputStream extends InputStream {
 				throw new IOException ("Invalid BZip2 header");
 			}
 
-			this.streamInitialised = true;
 			this.streamBlockSize = blockSize * 100000;
 		} catch (IOException e) {
 			// If the stream header could not be parsed, stop trying to read more data
