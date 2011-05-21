@@ -49,13 +49,13 @@ class BZip2HuffmanStageDecoder {
 	 * An array of values for each table that must be subtracted from the numerical value of a
 	 * Huffman code of a given bit length to give its canonical code index
 	 */
-	private final int[][] codeBases = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
+	private final int[][] codeBases = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH + 2];
 
 	/**
 	 * An array of values for each table that gives the highest numerical value of Huffman code of
 	 * a given bit length
 	 */
-	private final int[][] codeLimits = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
+	private final int[][] codeLimits = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH + 1];
 
 	/**
 	 * A mapping for each table from canonical code index to output symbol
@@ -106,7 +106,7 @@ class BZip2HuffmanStageDecoder {
 			for (int i = 0; i < alphabetSize; i++) {
 				tableBases[codeLengths[i] + 1]++;
 			}
-			for (int i = 1; i < BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH; i++) {
+			for (int i = 1; i < BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH + 2; i++) {
 				tableBases[i] += tableBases[i - 1];
 			}
 
