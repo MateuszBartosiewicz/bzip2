@@ -157,13 +157,15 @@ class BZip2HuffmanStageDecoder {
 		// Starting with the minimum bit length for the table, read additional bits one at a time
 		// until a complete code is recognised
 		int codeBits = bitInputStream.readBits (codeLength);
-		while (codeBits > tableLimits[codeLength]) {
-			codeLength++;
+		for (; codeLength <= BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH; codeLength++) {
+			if (codeBits <= tableLimits[codeLength]) {
+				// Convert the code to a symbol index and return
+				return this.codeSymbols[currentTable][codeBits - this.codeBases[currentTable][codeLength]];
+			}
 			codeBits = (codeBits << 1) | bitInputStream.readBits (1);
 		}
 
-		// Convert the code to a symbol index and return
-		return this.codeSymbols[currentTable][codeBits - this.codeBases[currentTable][codeLength]];
+		throw new IOException ("Error decoding BZip2 block");
 
 	}
 
