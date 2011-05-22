@@ -223,20 +223,10 @@ public class BZip2BlockDecompressor {
 		final int totalSelectors = this.bitInputStream.readBits (15);
 
 		/* Read and decode MTFed Huffman selector list */
-		final byte[] tableMRU = new byte[BZip2Constants.HUFFMAN_MAXIMUM_TABLES];
-		for (int i = 0; i < totalTables; i++) {
-			tableMRU[i] = (byte)i;
-		}
-
+		final MoveToFront tableMTF = new MoveToFront();
 		final byte[] selectors = new byte[totalSelectors];
 		for (int selector = 0; selector < totalSelectors; selector++) {
-			int table = this.bitInputStream.readUnary();
-			final byte toFrontTable = tableMRU[table];
-			for (; table > 0; table--) {
-				tableMRU[table] = tableMRU[table - 1];
-			}
-			tableMRU[0] = toFrontTable;
-			selectors[selector] = toFrontTable;
+			selectors[selector] = tableMTF.indexToFront (this.bitInputStream.readUnary());
 		}
 
 		/* Read the Canonical Huffman code lengths for each table */
@@ -268,14 +258,11 @@ public class BZip2BlockDecompressor {
 		final int streamBlockSize = this.bwtBlock.length;
 		final int huffmanEndOfBlockSymbol = this.huffmanEndOfBlockSymbol;
 		final int[] bwtByteCounts = this.bwtByteCounts;
-		final char[] symbolMRU = new char[256];
+		final MoveToFront symbolMTF = new MoveToFront();
 		int bwtBlockLength = 0;
 		int repeatCount = 0;
 		int repeatIncrement = 1;
-
-		for (char i = 0; i < 256; i++) {
-			symbolMRU[i] = i;
-		}
+		int mtfValue = 0;
 
 		for (;;) {
 			final int nextSymbol = huffmanDecoder.nextSymbol();
@@ -291,7 +278,7 @@ public class BZip2BlockDecompressor {
 					if (bwtBlockLength + repeatCount > streamBlockSize) {
 						throw new IOException ("BZip2 block exceeds declared block size");
 					}
-					final byte nextByte = huffmanSymbolMap[symbolMRU[0]];
+					final byte nextByte = huffmanSymbolMap[mtfValue];
 					bwtByteCounts[nextByte & 0xff] += repeatCount;
 					while (--repeatCount >= 0) {
 						bwtBlock[bwtBlockLength++] = nextByte;
@@ -304,11 +291,9 @@ public class BZip2BlockDecompressor {
 				if (nextSymbol == huffmanEndOfBlockSymbol)
 					break;
 
-				final char toFrontSymbol = symbolMRU[nextSymbol - 1];
-				System.arraycopy (symbolMRU, 0, symbolMRU, 1, nextSymbol - 1);
-				symbolMRU[0] = toFrontSymbol;
+				mtfValue = symbolMTF.indexToFront (nextSymbol - 1) & 0xff;
 
-				final byte nextByte = huffmanSymbolMap[toFrontSymbol];
+				final byte nextByte = huffmanSymbolMap[mtfValue];
 				bwtByteCounts[nextByte & 0xff]++;
 				bwtBlock[bwtBlockLength++] = nextByte;
 

@@ -98,7 +98,7 @@ class BZip2HuffmanStageEncoder {
 		final char[] mtfBlock = this.mtfBlock;
 		final int[] mtfSymbolFrequencies = this.mtfSymbolFrequencies;
 		final byte[] huffmanSymbolMap = new byte[256];
-		final byte[] symbolMRU = new byte[256];
+		final MoveToFront symbolMTF = new MoveToFront();
 
 		int totalUniqueValues = 0;
 		for (int i = 0; i < 256; i++) {
@@ -109,33 +109,18 @@ class BZip2HuffmanStageEncoder {
 
 		final int endOfBlockSymbol = totalUniqueValues + 1;
 
-		for (int i = 0; i < totalUniqueValues; i++) {
-			symbolMRU[i] = (byte) i;
-		}
-
 		int mtfIndex = 0;
 		int repeatCount = 0;
 		int totalRunAs = 0;
 		int totalRunBs = 0;
 
 		for (int i = 0; i < bwtLength; i++) {
-			final byte symbol = huffmanSymbolMap[bwtBlock[i] & 0xff];
 
 			// Move To Front
-			int mtfValue = 0;
-			byte temp = symbolMRU[0];
-			if (symbol != temp) {
-				symbolMRU[0] = symbol;
-				while (symbol != temp) {
-					mtfValue++;
-					byte temp2 = temp;
-					temp = symbolMRU[mtfValue];
-					symbolMRU[mtfValue] = temp2;
-				}
-			}
+			int mtfPosition = symbolMTF.valueToFront (huffmanSymbolMap[bwtBlock[i] & 0xff]);
 
 			// Run Length Encode
-			if (mtfValue == 0) {
+			if (mtfPosition == 0) {
 				repeatCount++;
 			} else {
 				if (repeatCount > 0) {
@@ -158,8 +143,8 @@ class BZip2HuffmanStageEncoder {
 					repeatCount = 0;
 				}
 
-				mtfBlock[mtfIndex++] = (char) (mtfValue + 1);
-				mtfSymbolFrequencies[mtfValue + 1]++;
+				mtfBlock[mtfIndex++] = (char) (mtfPosition + 1);
+				mtfSymbolFrequencies[mtfPosition + 1]++;
 			}
 		}
 
@@ -414,25 +399,10 @@ class BZip2HuffmanStageEncoder {
 		bitOutputStream.writeBits (3, totaTables);
 		bitOutputStream.writeBits (15, totalSelectors);
 
-		byte[] selectorMRU = new byte[BZip2Constants.HUFFMAN_MAXIMUM_TABLES];
-		for (int i = 0; i < totaTables; i++) {
-			selectorMRU[i] = (byte) i;
-		}
+		MoveToFront selectorMTF = new MoveToFront();
 
 		for (int i = 0; i < totalSelectors; i++) {
-			final byte selector = selectors[i];
-
-			byte temp = selectorMRU[0];
-			selectorMRU[0] = selector;
-			int mtfValue = 0;
-			while (selector != temp) {
-				mtfValue++;
-				byte temp2 = temp;
-				temp = selectorMRU[mtfValue];
-				selectorMRU[mtfValue] = temp2;
-			}
-
-			bitOutputStream.writeUnary (mtfValue);
+			bitOutputStream.writeUnary (selectorMTF.valueToFront (selectors[i]));
 		}
 
 	}
