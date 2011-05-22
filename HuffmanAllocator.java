@@ -163,9 +163,7 @@ public class HuffmanAllocator {
 	 */
 	public static void allocateHuffmanCodeLengths (final int[] array, final int maximumLength) {
 
-		final int length = array.length;
-
-		switch (length) {
+		switch (array.length) {
 			case 2:
 				array[1] = 1;
 			case 1:
@@ -180,10 +178,10 @@ public class HuffmanAllocator {
 		int nodesToRelocate = findNodesToRelocate (array, maximumLength);
 
 		/* Pass 3 : Generate code lengths */
-		if ((array[0] % length) >= nodesToRelocate) {
+		if ((array[0] % array.length) >= nodesToRelocate) {
 			allocateNodeLengths (array);
 		} else {
-			int insertDepth = maximumLength - (32 -Integer.numberOfLeadingZeros (nodesToRelocate - 1));
+			int insertDepth = maximumLength - (32 - Integer.numberOfLeadingZeros (nodesToRelocate - 1));
 			allocateNodeLengthsWithRelocation (array, nodesToRelocate, insertDepth);
 		}
 
