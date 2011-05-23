@@ -260,9 +260,9 @@ class BZip2HuffmanStageEncoder {
 					}
 				}
 
-				int bestTable = -1;
-				int bestCost = Integer.MAX_VALUE;
-				for (int i = 0 ; i < totalTables; i++) {
+				int bestTable = 0;
+				int bestCost = cost[0];
+				for (int i = 1 ; i < totalTables; i++) {
 					final int tableCost = cost[i];
 					if (tableCost < bestCost) {
 						bestCost = tableCost;
