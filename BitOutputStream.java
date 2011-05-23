@@ -30,7 +30,7 @@ public class BitOutputStream {
 	 * @param value The bit to write
 	 * @throws IOException if an error occurs writing to the stream
 	 */
-	public void writeBoolean (boolean value) throws IOException {
+	public void writeBoolean (final boolean value) throws IOException {
 
 		int bitCount = this.bitCount + 1;
 		int bitBuffer = this.bitBuffer | ((value ? 1 : 0) << (32 - bitCount));
@@ -114,7 +114,7 @@ public class BitOutputStream {
 	/**
 	 * @param outputStream The OutputStream to wrap
 	 */
-	public BitOutputStream (OutputStream outputStream) {
+	public BitOutputStream (final OutputStream outputStream) {
 
 		this.outputStream = outputStream;
 

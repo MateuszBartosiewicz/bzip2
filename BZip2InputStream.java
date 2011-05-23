@@ -116,7 +116,7 @@ public class BZip2InputStream extends InputStream {
 	 * @see java.io.InputStream#read(byte[], int, int)
 	 */
 	@Override
-	public int read (byte[] destination, int offset, int length) throws IOException {
+	public int read (final byte[] destination, final int offset, final int length) throws IOException {
 
 		int bytesRead = -1;
 		if (this.blockDecompressor == null) {
@@ -257,7 +257,7 @@ public class BZip2InputStream extends InputStream {
 	 * @param headerless If {@code true}, the caller is assumed to have read away the stream's
 	 *                   leading "BZ" identifier bytes
 	 */
-	public BZip2InputStream (final InputStream inputStream, boolean headerless) {
+	public BZip2InputStream (final InputStream inputStream, final boolean headerless) {
 
 		if (inputStream == null) {
 			throw new IllegalArgumentException ("Null input stream");

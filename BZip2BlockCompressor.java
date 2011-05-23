@@ -67,7 +67,7 @@ public class BZip2BlockCompressor {
 	 * @param value The value to write
 	 * @param runLength The run length of the value to write
 	 */
-	private void writeRun (int value, int runLength) {
+	private void writeRun (final int value, int runLength) {
 
 		final int blockLength = this.blockLength;
 		final byte[] block = this.block;
@@ -223,7 +223,7 @@ public class BZip2BlockCompressor {
 	 * @param bitOutputStream The stream to which compressed BZip2 data is written
 	 * @param blockSize The declared block size in bytes
 	 */
-	public BZip2BlockCompressor (BitOutputStream bitOutputStream, int blockSize) {
+	public BZip2BlockCompressor (final BitOutputStream bitOutputStream, final int blockSize) {
 
 		this.bitOutputStream = bitOutputStream;
 

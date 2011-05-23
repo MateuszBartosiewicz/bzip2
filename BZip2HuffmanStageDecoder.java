@@ -176,7 +176,7 @@ class BZip2HuffmanStageDecoder {
 	 * @param groupCodeLengths The Canonical Huffman code lengths for each group
 	 * @param selectors The selectors that determine which table to use for each 50 byte group of symbols
 	 */
-	public BZip2HuffmanStageDecoder (final BitInputStream bitInputStream, final int alphabetSize, final byte[][] groupCodeLengths, byte[] selectors) {
+	public BZip2HuffmanStageDecoder (final BitInputStream bitInputStream, final int alphabetSize, final byte[][] groupCodeLengths, final byte[] selectors) {
 
 		this.bitInputStream = bitInputStream;
 		this.selectors = selectors;

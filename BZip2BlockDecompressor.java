@@ -251,7 +251,7 @@ public class BZip2BlockDecompressor {
 	 * @param huffmanDecoder The Huffman decoder through which symbols are read
 	 * @throws IOException if an end-of-block symbol was not decoded within the declared block size
 	 */
-	private void decodeHuffmanData (BZip2HuffmanStageDecoder huffmanDecoder) throws IOException {
+	private void decodeHuffmanData (final BZip2HuffmanStageDecoder huffmanDecoder) throws IOException {
 
 		final byte[] bwtBlock = this.bwtBlock;
 		final byte[] huffmanSymbolMap = this.huffmanSymbolMap;
@@ -313,7 +313,7 @@ public class BZip2BlockDecompressor {
 	 * @param bwtStartPointer The start pointer into the BWT array
 	 * @throws IOException if the given start pointer is invalid
 	 */
-	private void initialiseInverseBWT (int bwtStartPointer) throws IOException {
+	private void initialiseInverseBWT (final int bwtStartPointer) throws IOException {
 
 		final byte[] bwtBlock  = this.bwtBlock;
 		final int[] bwtMergedPointers = new int[this.bwtBlockLength];
@@ -422,7 +422,7 @@ public class BZip2BlockDecompressor {
 	 * @param length The number of bytes to read
 	 * @return The number of bytes actually read, or -1 if there are no bytes left in the block
 	 */
-	public int read (final byte[] destination, int offset, int length) {
+	public int read (final byte[] destination, int offset, final int length) {
 
 		int i;
 		for (i = 0; i < length; i++, offset++) {
@@ -459,7 +459,7 @@ public class BZip2BlockDecompressor {
 	 * @param blockSize The maximum decoded size of the block
 	 * @throws IOException If the block could not be decoded
 	 */
-	public BZip2BlockDecompressor (BitInputStream bitInputStream, int blockSize) throws IOException {
+	public BZip2BlockDecompressor (final BitInputStream bitInputStream, final int blockSize) throws IOException {
 
 		this.bitInputStream = bitInputStream;
 		this.bwtBlock = new byte[blockSize];

@@ -163,7 +163,7 @@ public class BitInputStream {
 	/**
 	 * @param inputStream The InputStream to wrap
 	 */
-	public BitInputStream (InputStream inputStream) {
+	public BitInputStream (final InputStream inputStream) {
 
 		this.inputStream = inputStream;
 

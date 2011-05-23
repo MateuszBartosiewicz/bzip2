@@ -18,7 +18,7 @@ public class HuffmanAllocator {
 	 * @return The smallest {@code k} such that {@code nodesToMove <= k <= i} and
 	 *         {@code i <= (array[k] % array.length)}
 	 */
-	private static int first (final int[] array, int i, int nodesToMove) {
+	private static int first (final int[] array, int i, final int nodesToMove) {
 
 		final int length = array.length;
 		final int limit = i;

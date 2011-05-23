@@ -76,7 +76,7 @@ class BZip2HuffmanStageEncoder {
 	 * @param mtfLength The length to select a table count for
 	 * @return The selected table count
 	 */
-	private static int selectTableCount (int mtfLength) {
+	private static int selectTableCount (final int mtfLength) {
 
 		if (mtfLength >= 2400) return 6;
 		if (mtfLength >= 1200) return 5;
@@ -494,7 +494,7 @@ class BZip2HuffmanStageEncoder {
 	 * @param bwtBlock The Burrows Wheeler Transformed data
 	 * @param bwtLength The actual length of the BWT data
 	 */
-	public BZip2HuffmanStageEncoder (BitOutputStream bitOutputStream, boolean[] bwtValuesInUse, int[] bwtBlock, int bwtLength) {
+	public BZip2HuffmanStageEncoder (final BitOutputStream bitOutputStream, final boolean[] bwtValuesInUse, final int[] bwtBlock, final int bwtLength) {
 
 		this.bitOutputStream = bitOutputStream;
 		this.mtfBlock = new char[2 * bwtBlock.length];

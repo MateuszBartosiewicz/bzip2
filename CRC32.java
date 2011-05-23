@@ -87,9 +87,9 @@ public final class CRC32 {
 	 * Update the CRC with a single byte
 	 * @param value The value to update the CRC with
 	 */
-	public void updateCRC (int value) {
+	public void updateCRC (final int value) {
 
-		int crc = this.crc;
+		final int crc = this.crc;
 
 		this.crc = (crc << 8) ^ crc32Lookup[((crc >> 24) ^ value) & 0xff];
 
@@ -101,7 +101,7 @@ public final class CRC32 {
 	 * @param value The value to update the CRC with
 	 * @param count The number of bytes
 	 */
-	public void updateCRC (int value, int count) {
+	public void updateCRC (final int value, int count) {
 
 		int crc = this.crc;
 
