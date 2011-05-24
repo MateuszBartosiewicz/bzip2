@@ -49,13 +49,13 @@ class BZip2HuffmanStageDecoder {
 	 * An array of values for each table that must be subtracted from the numerical value of a
 	 * Huffman code of a given bit length to give its canonical code index
 	 */
-	private final int[][] codeBases = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH + 2];
+	private final int[][] codeBases = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH + 2];
 
 	/**
 	 * An array of values for each table that gives the highest numerical value of Huffman code of
 	 * a given bit length
 	 */
-	private final int[][] codeLimits = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH + 1];
+	private final int[][] codeLimits = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH + 1];
 
 	/**
 	 * A mapping for each table from canonical code index to output symbol
@@ -92,7 +92,7 @@ class BZip2HuffmanStageDecoder {
 			final int[] tableSymbols = this.codeSymbols[table];
 
 			final byte[] codeLengths = tableCodeLengths[table];
-			int minimumLength = BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH;
+			int minimumLength = BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH;
 			int maximumLength = 0;
 
 			// Find the minimum and maximum code length for the table
@@ -106,7 +106,7 @@ class BZip2HuffmanStageDecoder {
 			for (int i = 0; i < alphabetSize; i++) {
 				tableBases[codeLengths[i] + 1]++;
 			}
-			for (int i = 1; i < BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH + 2; i++) {
+			for (int i = 1; i < BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH + 2; i++) {
 				tableBases[i] += tableBases[i - 1];
 			}
 
@@ -157,7 +157,7 @@ class BZip2HuffmanStageDecoder {
 		// Starting with the minimum bit length for the table, read additional bits one at a time
 		// until a complete code is recognised
 		int codeBits = bitInputStream.readBits (codeLength);
-		for (; codeLength <= BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH; codeLength++) {
+		for (; codeLength <= BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH; codeLength++) {
 			if (codeBits <= tableLimits[codeLength]) {
 				// Convert the code to a symbol index and return
 				return this.codeSymbols[currentTable][codeBits - this.codeBases[currentTable][codeLength]];

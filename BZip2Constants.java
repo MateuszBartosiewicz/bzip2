@@ -48,9 +48,14 @@ interface BZip2Constants {
 	static final int HUFFMAN_MAXIMUM_ALPHABET_SIZE = 258;
 
 	/**
-	 * Maximum possible Huffman code length
+	 * The longest Huffman code length created by the encoder
 	 */
-	static final int HUFFMAN_MAXIMUM_CODE_LENGTH = 20;
+	static final int HUFFMAN_ENCODE_MAXIMUM_CODE_LENGTH = 20;
+
+	/**
+	 * The longest Huffman code length accepted by the decoder
+	 */
+	static final int HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH = 23;
 
 	/**
 	 * Maximum number of alternative Huffman tables

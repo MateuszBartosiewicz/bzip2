@@ -294,7 +294,7 @@ class BZip2HuffmanStageEncoder {
 					sortedFrequencies[j] = sortedFrequencyMap[j] >> 9;
 				}
 
-				HuffmanAllocator.allocateHuffmanCodeLengths (sortedFrequencies, BZip2Constants.HUFFMAN_MAXIMUM_CODE_LENGTH);
+				HuffmanAllocator.allocateHuffmanCodeLengths (sortedFrequencies, BZip2Constants.HUFFMAN_ENCODE_MAXIMUM_CODE_LENGTH);
 
 				for (int j = 0; j < huffmanAlphabetSize; j++) {
 					huffmanCodeLengths[i][sortedFrequencyMap[j] & 0x1ff] = sortedFrequencies[j];
