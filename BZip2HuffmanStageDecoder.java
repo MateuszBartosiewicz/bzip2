@@ -36,29 +36,29 @@ class BZip2HuffmanStageDecoder {
 	private final BitInputStream bitInputStream;
 
 	/**
-	 * The selectors that decide which Huffman table to use for each group of 50 symbols
+	 * The Huffman table number to use for each group of 50 symbols
 	 */
 	private final byte[] selectors;
 
 	/**
-	 * The minimum Huffman code length for each table
+	 * The minimum code length for each Huffman table
 	 */
 	private final int[] minimumLengths = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES];
 
 	/**
-	 * An array of values for each table that must be subtracted from the numerical value of a
-	 * Huffman code of a given bit length to give its canonical code index
+	 * An array of values for each Huffman table that must be subtracted from the numerical value of
+	 * a Huffman code of a given bit length to give its canonical code index
 	 */
 	private final int[][] codeBases = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH + 2];
 
 	/**
-	 * An array of values for each table that gives the highest numerical value of Huffman code of
-	 * a given bit length
+	 * An array of values for each Huffman table that gives the highest numerical value of a Huffman
+	 * code of a given bit length
 	 */
 	private final int[][] codeLimits = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH + 1];
 
 	/**
-	 * A mapping for each table from canonical code index to output symbol
+	 * A mapping for each Huffman table from canonical code index to output symbol
 	 */
 	private final int[][] codeSymbols = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
 
@@ -172,17 +172,17 @@ class BZip2HuffmanStageDecoder {
 
 	/**
 	 * @param bitInputStream The BitInputStream from which Huffman codes are read
-	 * @param alphabetSize The total number of codes (uniform for each group)
-	 * @param groupCodeLengths The Canonical Huffman code lengths for each group
-	 * @param selectors The selectors that determine which table to use for each 50 byte group of symbols
+	 * @param alphabetSize The total number of codes (uniform for each table)
+	 * @param tableCodeLengths The Canonical Huffman code lengths for each table
+	 * @param selectors The Huffman table number to use for each group of 50 symbols
 	 */
-	public BZip2HuffmanStageDecoder (final BitInputStream bitInputStream, final int alphabetSize, final byte[][] groupCodeLengths, final byte[] selectors) {
+	public BZip2HuffmanStageDecoder (final BitInputStream bitInputStream, final int alphabetSize, final byte[][] tableCodeLengths, final byte[] selectors) {
 
 		this.bitInputStream = bitInputStream;
 		this.selectors = selectors;
 		this.currentTable = this.selectors[0];
 
-		createHuffmanDecodingTables (alphabetSize, groupCodeLengths);
+		createHuffmanDecodingTables (alphabetSize, tableCodeLengths);
 
 	}
 
