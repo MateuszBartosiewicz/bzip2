@@ -22,6 +22,7 @@
 
 package org.itadaki.bzip2;
 
+
 /**
  * BZip2 constants shared between the compressor and decompressor
  */

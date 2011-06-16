@@ -25,16 +25,20 @@ package org.itadaki.bzip2;
 import java.io.IOException;
 
 
+/*
+ * Block encoding consists of the following stages:
+ * 1. Run-Length Encoding[1] - write()
+ * 2. Burrows Wheeler Transform - close() (through BZip2DivSufSort)
+ * 3. Write block header - close()
+ * 4. Move To Front Transform - close() (through BZip2HuffmanStageEncoder)
+ * 5. Run-Length Encoding[2] - close()  (through BZip2HuffmanStageEncoder)
+ * 6. Create and write Huffman tables - close() (through BZip2HuffmanStageEncoder)
+ * 7. Huffman encode and write data - close() (through BZip2HuffmanStageEncoder)
+ */
 /**
  * Compresses and writes a single BZip2 block
  */
 public class BZip2BlockCompressor {
-
-	/**
-	 * A value outside the range of an unsigned byte that is placed in the {@link #rleCurrentValue}
-	 * field when no repeated RLE character is currently being accumulated
-	 */
-	private static final int RLE_NOT_A_VALUE = 0xffff;
 
 	/**
 	 * The stream to which compressed BZip2 data is written
@@ -73,19 +77,18 @@ public class BZip2BlockCompressor {
 	private final int[] bwtBlock;
 
 	/**
-	 * The current RLE value being accumulated
+	 * The current RLE value being accumulated (undefined when {@link #rleLength} is 0)
 	 */
-	private int rleCurrentValue = RLE_NOT_A_VALUE;
+	private int rleCurrentValue = -1;
 
 	/**
-	 * The repeat count of the current RLE value. Only valid when zero (initially) or when
-	 * {@link #rleCurrentValue} is not {@link #RLE_NOT_A_VALUE}
+	 * The repeat count of the current RLE value
 	 */
 	private int rleLength = 0;
 
 
 	/**
-	 * Writes an RLE run to the block array
+	 * Writes an RLE run to the block array, updating the block CRC and present values array as required
 	 * @param value The value to write
 	 * @param runLength The run length of the value to write
 	 */
@@ -97,7 +100,7 @@ public class BZip2BlockCompressor {
 		this.blockValuesPresent[value] = true;
 		this.crc.updateCRC (value, runLength);
 
-		final byte byteValue = (byte) value;
+		final byte byteValue = (byte)value;
 		switch (runLength) {
 			case 1:
 				block[blockLength] = byteValue;
@@ -133,9 +136,9 @@ public class BZip2BlockCompressor {
 
 
 	/**
-	 * Writes a byte to the block data, accumulating to RLE runs as necessary
-	 * @param value The byte to write to the block data
-	 * @return {@code true} if the byte was written, of {@code false} if the block is true
+	 * Writes a byte to the block, accumulating to an RLE run where possible
+	 * @param value The byte to write
+	 * @return {@code true} if the byte was written, or {@code false} if the block is already full
 	 */
 	public boolean write (final int value) {
 
@@ -146,20 +149,20 @@ public class BZip2BlockCompressor {
 		final int rleCurrentValue = this.rleCurrentValue;
 		final int rleLength = this.rleLength;
 
-		if (rleCurrentValue == RLE_NOT_A_VALUE) {
+		if (rleLength == 0) {
 			this.rleCurrentValue = value;
 			this.rleLength = 1;
-		} else if (rleCurrentValue == value) {
+		} else if (rleCurrentValue != value) {
+			writeRun (rleCurrentValue & 0xff, rleLength);
+			this.rleCurrentValue = value;
+			this.rleLength = 1;
+		} else {
 			if (rleLength == 254) {
 				writeRun (rleCurrentValue & 0xff, 255);
-				this.rleCurrentValue = RLE_NOT_A_VALUE;
+				this.rleLength = 0;
 			} else {
 				this.rleLength = rleLength + 1;
 			}
-		} else {
-			writeRun (rleCurrentValue & 0xff, rleLength);
-			this.rleLength = 1;
-			this.rleCurrentValue = value;
 		}
 
 		return true;
@@ -168,8 +171,8 @@ public class BZip2BlockCompressor {
 
 
 	/**
-	 * Writes an array of data to the data block
-	 * @param data The data to write
+	 * Writes an array to the block
+	 * @param data The array to write
 	 * @param offset The offset within the input data to write from
 	 * @param length The number of bytes of input data to write
 	 * @return The actual number of input bytes written. May be less than the number requested, or
@@ -197,21 +200,26 @@ public class BZip2BlockCompressor {
 	 */
 	public void close() throws IOException {
 
-		if ((this.rleCurrentValue != RLE_NOT_A_VALUE) && (this.rleLength > 0)) {
+		// If an RLE run is in progress, write it out
+		if (this.rleLength > 0) {
 			writeRun (this.rleCurrentValue & 0xff, this.rleLength);
 		}
 
+		// Apply a one byte block wrap required by the BWT implementation
 		this.block[this.blockLength] = this.block[0];
 
+		// Perform the Burrows Wheeler Transform
 		BZip2DivSufSort divSufSort = new BZip2DivSufSort (this.block, this.bwtBlock, this.blockLength);
 		int origPtr = divSufSort.bwt();
 
+		// Write out the block header
 		this.bitOutputStream.writeBits (24, BZip2Constants.BLOCK_HEADER_MARKER_1);
 		this.bitOutputStream.writeBits (24, BZip2Constants.BLOCK_HEADER_MARKER_2);
 		this.bitOutputStream.writeInteger (this.crc.getCRC());
-		this.bitOutputStream.writeBoolean (false); // We never create randomised blocks
+		this.bitOutputStream.writeBoolean (false); // Randomised block flag. We never create randomised blocks
 		this.bitOutputStream.writeBits (24, origPtr);
 
+		// Perform the Huffman Encoding stage and write out the encoded data
 		BZip2HuffmanStageEncoder huffmanEncoder = new BZip2HuffmanStageEncoder (this.bitOutputStream, this.blockValuesPresent, this.bwtBlock, this.blockLength);
 		huffmanEncoder.encode();
 
@@ -243,16 +251,17 @@ public class BZip2BlockCompressor {
 
 	/**
 	 * @param bitOutputStream The stream to which compressed BZip2 data is written
-	 * @param blockSize The declared block size in bytes
+	 * @param blockSize The declared block size in bytes. Up to this many bytes will be accepted
+	 *                  into the block after Run-Lemgth Encoding is applied
 	 */
 	public BZip2BlockCompressor (final BitOutputStream bitOutputStream, final int blockSize) {
 
 		this.bitOutputStream = bitOutputStream;
 
-		this.block = new byte[blockSize];
-		this.bwtBlock = new int[blockSize];
-		this.blockLengthLimit = blockSize - 5; // 4 bytes for one RLE run plus a one byte block wrap
-
+		// One extra byte is added to allow for the block wrap applied in close()
+		this.block = new byte[blockSize + 1];
+		this.bwtBlock = new int[blockSize + 1];
+		this.blockLengthLimit = blockSize - 4; // 4 bytes for one RLE run
 
 	}
 

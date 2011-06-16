@@ -22,8 +22,9 @@
 
 package org.itadaki.bzip2;
 
+
 /**
- * An in-place Canonical Huffman code length allocator
+ * An in-place, length restricted Canonical Huffman code length allocator
  * 
  * Based on the algorithm proposed by R. L. Milidiœ, A. A. Pessoa and E. S. Laber in "In-place
  * Length-Restricted Prefix Coding" (see: http://www-di.inf.puc-rio.br/~laber/public/spire98.ps)

@@ -27,6 +27,9 @@ package org.itadaki.bzip2;
 /**
  * DivSufSort suffix array generator
  * Based on libdivsufsort 1.2.3 patched to support BZip2
+ * 
+ * This is a simple conversion of the original C with two minor bugfixes applied (see "BUGFIX"
+ * comments within the class). Documentation within the class is largely absent.
  */
 public class BZip2DivSufSort {
 
@@ -1094,7 +1097,7 @@ public class BZip2DivSufSort {
 	 */
 	private int trGetC (final int ISA, final int ISAd, final int ISAn, final int p) {
 
-		return (((ISAd + p) < ISAn) ? this.SA[ISAd + p] : this.SA[ISA + ((ISAd -ISA + p) % (ISAn - ISA))]);
+		return (((ISAd + p) < ISAn) ? this.SA[ISAd + p] : this.SA[ISA + ((ISAd - ISA + p) % (ISAn - ISA))]);
 
 	}
 
@@ -2055,7 +2058,7 @@ public class BZip2DivSufSort {
 					}
 				}
 			} else {
-				if (!budget.update (size, last - first)) break; // BUGFIX : Original code can loop infinitely without this
+				if (!budget.update (size, last - first)) break; // BUGFIX : Added to prevent an infinite loop in the original code
 				limit += 1; ISAd += 1;
 			}
 		}
@@ -2124,18 +2127,15 @@ public class BZip2DivSufSort {
 		final int[] SA = this.SA;
 
 		int first = 0, last;
-		int t, skip;
+		int t;
 
 		if (-n < SA[0]) {
-			skip = 0;
 			TRBudget budget = new TRBudget (n, trLog (n) * 2 / 3 + 1);
 			do {
 				if ((t = SA[first]) < 0) {
 					first -= t;
-					skip += t;
 				}
 				else {
-					skip = 0;
 					last = SA[ISA + t] + 1;
 					if (1 < (last - first)) {
 						trIntroSort (ISA, ISA + depth, ISA + n, first, last, budget, n);

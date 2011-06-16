@@ -25,9 +25,11 @@ package org.itadaki.bzip2;
 import java.io.IOException;
 import java.io.OutputStream;
 
+
 /**
- * <p>An OutputStream wrapper that writes (multiples of) single bits, flushing a byte at a time to
- * the wrapped stream when sufficient bits have been written</p>
+ * <p>An OutputStream wrapper that allows the writing of single bit booleans, unary numbers, bit
+ * strings of arbitrary length (up to 24 bits), and bit aligned 32-bit integers. A single byte at a
+ * time is written to the wrapped stream when sufficient bits have been accumulated
  */
 public class BitOutputStream {
 
@@ -37,7 +39,7 @@ public class BitOutputStream {
 	private final OutputStream outputStream;
 
 	/**
-	 * A buffer of bits to write to the output stream
+	 * A buffer of bits waiting to be written to the output stream
 	 */
 	private int bitBuffer;
 
@@ -121,7 +123,7 @@ public class BitOutputStream {
 
 
 	/**
-	 * Writes any remaining bits to the output stream, padding to a whole byte as required
+	 * Writes any remaining bits to the output stream, zero padding to a whole byte as required
 	 * @throws IOException if an error occurs writing to the stream
 	 */
 	public void flush() throws IOException {

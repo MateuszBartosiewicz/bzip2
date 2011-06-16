@@ -158,8 +158,8 @@ public class BZip2OutputStream extends OutputStream {
 
 
 	/**
-	 * Writes out any compressed data that has not yet been written, then writes the end of the
-	 * BZip2 stream. The underlying OutputStream is not closed
+	 * Compresses and writes out any as yet unwritten data, then writes the end of the BZip2 stream.
+	 * The underlying OutputStream is not closed
 	 * @throws IOException on any I/O error writing to the output stream
 	 */
 	public void finish() throws IOException {

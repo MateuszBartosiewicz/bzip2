@@ -22,6 +22,7 @@
 
 package org.itadaki.bzip2;
 
+
 /**
  * A 256 entry Move To Front transform
  */
@@ -58,7 +59,7 @@ public class MoveToFront {
 
 
 	/**
-	 * Moves a value to the head of the MTF list
+	 * Moves a value to the head of the MTF list (forward Move To Front transform)
 	 * @param value The value to move
 	 * @return The position the value moved from
 	 */
@@ -84,7 +85,8 @@ public class MoveToFront {
 
 
 	/**
-	 * Gets the value from a given index and moves it to the front of the MTF list
+	 * Gets the value from a given index and moves it to the front of the MTF list (inverse Move To
+	 * Front transform)
 	 * @param index The index to move
 	 * @return The value at the given index
 	 */

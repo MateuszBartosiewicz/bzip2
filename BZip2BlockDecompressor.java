@@ -24,16 +24,17 @@ package org.itadaki.bzip2;
 
 import java.io.IOException;
 
+
 /*
  * Block decoding consists of the following stages:
  * 1. Read block header - BZip2BlockDecompressor()
  * 2. Read Huffman tables - readHuffmanTables()
  * 3. Read and decode Huffman encoded data - decodeHuffmanData()
- * 4. Run-Length Decoding[1] - decodeHuffmanData()
- * 5. Move To Front Transform - decodeHuffmanData()
+ * 4. Run-Length Decoding[2] - decodeHuffmanData()
+ * 5. Inverse Move To Front Transform - decodeHuffmanData()
  * 6. Inverse Burrows Wheeler Transform - initialiseInverseBWT()
- * 7. Run-Length Decoding[2] - read()
- * 8. Block De-Randomisation - read() (through decodeNextBWTByte())
+ * 7. Run-Length Decoding[1] - read()
+ * 8. Optional Block De-Randomisation - read() (through decodeNextBWTByte())
  */
 /**
  * Reads and decompresses a single BZip2 block
@@ -199,17 +200,18 @@ public class BZip2BlockDecompressor {
 	 */
 	private BZip2HuffmanStageDecoder readHuffmanTables() throws IOException {
 
+		final BitInputStream bitInputStream = this.bitInputStream;
 		final byte[] huffmanSymbolMap = this.huffmanSymbolMap;
 		final byte[][] tableCodeLengths = new byte[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
 
 		/* Read Huffman symbol to output byte map */
-		int huffmanUsedRanges = this.bitInputStream.readBits (16);
+		int huffmanUsedRanges = bitInputStream.readBits (16);
 		int huffmanSymbolCount = 0;
 
 		for (int i = 0; i < 16; i++) {
 			if ((huffmanUsedRanges & ((1 << 15) >> i)) != 0) {
 				for (int j = 0, k = i << 4; j < 16; j++, k++) {
-					if (this.bitInputStream.readBoolean()) {
+					if (bitInputStream.readBoolean()) {
 						huffmanSymbolMap[huffmanSymbolCount++] = (byte)k;
 					}
 				}
@@ -219,28 +221,28 @@ public class BZip2BlockDecompressor {
 		this.huffmanEndOfBlockSymbol = endOfBlockSymbol;
 
 		/* Read total number of tables and selectors*/
-		final int totalTables = this.bitInputStream.readBits (3);
-		final int totalSelectors = this.bitInputStream.readBits (15);
+		final int totalTables = bitInputStream.readBits (3);
+		final int totalSelectors = bitInputStream.readBits (15);
 
 		/* Read and decode MTFed Huffman selector list */
 		final MoveToFront tableMTF = new MoveToFront();
 		final byte[] selectors = new byte[totalSelectors];
 		for (int selector = 0; selector < totalSelectors; selector++) {
-			selectors[selector] = tableMTF.indexToFront (this.bitInputStream.readUnary());
+			selectors[selector] = tableMTF.indexToFront (bitInputStream.readUnary());
 		}
 
 		/* Read the Canonical Huffman code lengths for each table */
 		for (int table = 0; table < totalTables; table++) {
-			int currentLength = this.bitInputStream.readBits (5);
+			int currentLength = bitInputStream.readBits (5);
 			for (int i = 0; i <= endOfBlockSymbol; i++) {
-				while (this.bitInputStream.readBoolean()) {
-					currentLength += this.bitInputStream.readBoolean() ? -1 : 1;
+				while (bitInputStream.readBoolean()) {
+					currentLength += bitInputStream.readBoolean() ? -1 : 1;
 				}
 				tableCodeLengths[table][i] = (byte)currentLength;
 			}
 		}
 
-		return new BZip2HuffmanStageDecoder (this.bitInputStream, endOfBlockSymbol + 1, tableCodeLengths, selectors);
+		return new BZip2HuffmanStageDecoder (bitInputStream, endOfBlockSymbol + 1, tableCodeLengths, selectors);
 
 	}
 
@@ -347,7 +349,7 @@ public class BZip2BlockDecompressor {
 
 	/**
 	 * Decodes a byte from the Burrows-Wheeler Transform stage. If the block has randomisation
-	 * applied, reverses the randomisation as required
+	 * applied, reverses the randomisation
 	 * @return The decoded byte
 	 */
 	private int decodeNextBWTByte() {

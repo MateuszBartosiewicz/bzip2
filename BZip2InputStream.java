@@ -35,13 +35,13 @@ import java.io.InputStream;
  * <p>On encountering any error decoding the compressed stream, an IOException is thrown, and
  * further reads will return {@code -1}</p>
  *
- * <p><b>Note:</b> Each BZip2 compressed block contains a CRC code which is verified only after the
- * block has been read completely. If verification fails, an exception is thrown on the final read
- * from the block, <b>potentially after corrupt data has already been returned</b>. The compressed
- * stream also contains a final CRC code which is verified once the end of the stream has been
- * reached. <b>This check may fail even if all the preceding blocks passed CRC verification</b>. If
- * this possibility is of concern, you should read and store the entire decompressed stream before
- * further processing.</p>
+ * <p><b>Note:</b> Each BZip2 compressed block contains a CRC code which is verified after the block
+ * has been read completely. If verification fails, an exception is thrown on the final read from
+ * the block, <b>potentially after corrupt data has already been returned</b>. The compressed stream
+ * also contains a final CRC code which is verified once the end of the stream has been reached.
+ * <b>This check may fail even if every individual block in the stream passes CRC verification</b>.
+ * If this possibility is of concern, you should read and store the entire decompressed stream
+ * before further processing.</p>
  *
  * <p>Instances of this class are not threadsafe.</p>
  */
@@ -72,8 +72,8 @@ public class BZip2InputStream extends InputStream {
 	 * The declared block size of the stream (before final run-length decoding). The final block
 	 * will usually be smaller, but no block in the stream has to be exactly this large, and an
 	 * encoder could in theory choose to mix blocks of any size up to this value. Its function is
-	 * therefore as a hint to the decompressor as to how much working space is enough to decompress
-	 * blocks in a given stream
+	 * therefore as a hint to the decompressor as to how much working space is sufficient to
+	 * decompress blocks in a given stream
 	 */
 	private int streamBlockSize;
 

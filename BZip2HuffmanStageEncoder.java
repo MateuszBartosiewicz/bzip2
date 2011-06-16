@@ -156,11 +156,10 @@ class BZip2HuffmanStageEncoder {
 							totalRunBs++;
 						}
 
-						if (repeatCount >= 2) {
-							repeatCount = (repeatCount - 2) >> 1;
-						} else {
+						if (repeatCount < 2) {
 							break;
 						}
+						repeatCount = (repeatCount - 2) >> 1;
 					}
 					repeatCount = 0;
 				}
@@ -181,11 +180,10 @@ class BZip2HuffmanStageEncoder {
 					totalRunBs++;
 				}
 
-				if (repeatCount >= 2) {
-					repeatCount = (repeatCount - 2) >> 1;
-				} else {
+				if (repeatCount < 2) {
 					break;
 				}
+				repeatCount = (repeatCount - 2) >> 1;
 			}
 		}
 
@@ -245,7 +243,7 @@ class BZip2HuffmanStageEncoder {
 
 
 	/**
-	 * Iteratively co-optimise the alternative Huffman table code lengths and selector list
+	 * Iteratively co-optimise the selector list and the alternative Huffman table code lengths
 	 * @param totalTables The total number of tables
 	 * @return The total number of selectors
 	 */
@@ -374,7 +372,7 @@ class BZip2HuffmanStageEncoder {
 
 
 	/**
-	 * Write Huffman symbol to output byte map
+	 * Write the Huffman symbol to output byte map
 	 * @throws IOException on any I/O error writing the data
 	 */
 	private void writeSymbolMap() throws IOException {
@@ -408,7 +406,7 @@ class BZip2HuffmanStageEncoder {
 
 
 	/**
-	 * Write total number of Huffman tables and selectors, and MTFed Huffman selector list
+	 * Write total number of Huffman tables and selectors, and the MTFed Huffman selector list
 	 * @param totaTables The total number of Huffman tables
 	 * @param totalSelectors The total number of selectors
 	 * @throws IOException on any I/O error writing the data

@@ -27,8 +27,9 @@ import java.io.InputStream;
 
 
 /**
- * <p>An InputStream wrapper that provides (multiples of) single bits, reading a byte at a time from
- * the wrapped stream when more bits are required</p>
+ * <p>An InputStream wrapper that allows the reading of single bit booleans, unary numbers, bit
+ * strings of arbitrary length (up to 24 bits), and bit aligned 32-bit integers. A single byte at a
+ * time is read from the wrapped stream when more bits are required</p>
  */
 public class BitInputStream {
 
@@ -38,7 +39,7 @@ public class BitInputStream {
 	private final InputStream inputStream;
 
 	/**
-	 * A buffer of bits read from the input stream
+	 * A buffer of bits read from the input stream that have not yet been returned
 	 */
 	private int bitBuffer;
 
@@ -49,7 +50,7 @@ public class BitInputStream {
 
 
 	/**
-	 * Provides a single bit from the wrapped input stream
+	 * Reads a single bit from the wrapped input stream
 	 * @return {@code true} if the bit read was {@code 1}, otherwise {@code false}
 	 * @throws IOException if no more bits are available in the input stream
 	 */
@@ -79,7 +80,7 @@ public class BitInputStream {
 
 
 	/**
-	 * Provides a zero-terminated unary number from the wrapped input stream
+	 * Reads a zero-terminated unary number from the wrapped input stream
 	 * @return The unary number
 	 * @throws IOException if no more bits are available in the input stream
 	 */
@@ -115,7 +116,7 @@ public class BitInputStream {
 
 
 	/**
-	 * Provides up to 24 bits from the wrapped input stream
+	 * Reads up to 24 bits from the wrapped input stream
 	 * @param count The number of bits to read (maximum 24)
 	 * @return The bits requested, right-aligned within the integer
 	 * @throws IOException if more bits are requested than are available in the input stream
@@ -149,7 +150,7 @@ public class BitInputStream {
 
 
 	/**
-	 * Provides 32 bits of input as an integer
+	 * Reads 32 bits of input as an integer
 	 * @return The integer read
 	 * @throws IOException if 32 bits are not available in the input stream
 	 */

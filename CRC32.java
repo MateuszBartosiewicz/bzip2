@@ -22,6 +22,7 @@
 
 package org.itadaki.bzip2;
 
+
 /**
  * A CRC32 calculator
  */
