@@ -60,7 +60,7 @@ public class BitOutputStream {
 		int bitBuffer = this.bitBuffer | ((value ? 1 : 0) << (32 - bitCount));
 
 		if (bitCount == 8) {
-			this.outputStream.write (bitBuffer >> 24);
+			this.outputStream.write (bitBuffer >>> 24);
 			bitBuffer = 0;
 			bitCount = 0;
 		}
@@ -94,11 +94,12 @@ public class BitOutputStream {
 	 */
 	public void writeBits (final int count, final int value) throws IOException {
 
-		int bitCount = this.bitCount + count;
-		int bitBuffer = this.bitBuffer | (value << (32 - bitCount));
+		int bitCount = this.bitCount;
+		int bitBuffer = this.bitBuffer | ((value << (32 - count)) >>> bitCount);
+		bitCount += count;
 
 		while (bitCount >= 8) {
-			this.outputStream.write (bitBuffer >> 24);
+			this.outputStream.write (bitBuffer >>> 24);
 			bitBuffer <<= 8;
 			bitCount -= 8;
 		}
@@ -116,7 +117,7 @@ public class BitOutputStream {
 	 */
 	public void writeInteger (final int value) throws IOException {
 
-		writeBits (16, (value >> 16) & 0xffff);
+		writeBits (16, (value >>> 16) & 0xffff);
 		writeBits (16, value & 0xffff);
 
 	}
