@@ -28,7 +28,7 @@ import java.io.IOException;
 /**
  * A decoder for the BZip2 Huffman coding stage
  */
-class BZip2HuffmanStageDecoder {
+public class BZip2HuffmanStageDecoder {
 
 	/**
 	 * The BitInputStream from which Huffman codes are read
