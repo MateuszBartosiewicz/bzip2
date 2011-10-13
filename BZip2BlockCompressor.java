@@ -153,6 +153,7 @@ public class BZip2BlockCompressor {
 			this.rleCurrentValue = value;
 			this.rleLength = 1;
 		} else if (rleCurrentValue != value) {
+			// This path commits us to write 6 bytes - one RLE run (5 bytes) plus one extra
 			writeRun (rleCurrentValue & 0xff, rleLength);
 			this.rleCurrentValue = value;
 			this.rleLength = 1;
@@ -210,14 +211,14 @@ public class BZip2BlockCompressor {
 
 		// Perform the Burrows Wheeler Transform
 		BZip2DivSufSort divSufSort = new BZip2DivSufSort (this.block, this.bwtBlock, this.blockLength);
-		int origPtr = divSufSort.bwt();
+		int bwtStartPointer = divSufSort.bwt();
 
 		// Write out the block header
 		this.bitOutputStream.writeBits (24, BZip2Constants.BLOCK_HEADER_MARKER_1);
 		this.bitOutputStream.writeBits (24, BZip2Constants.BLOCK_HEADER_MARKER_2);
 		this.bitOutputStream.writeInteger (this.crc.getCRC());
 		this.bitOutputStream.writeBoolean (false); // Randomised block flag. We never create randomised blocks
-		this.bitOutputStream.writeBits (24, origPtr);
+		this.bitOutputStream.writeBits (24, bwtStartPointer);
 
 		// Perform the Huffman Encoding stage and write out the encoded data
 		BZip2HuffmanStageEncoder huffmanEncoder = new BZip2HuffmanStageEncoder (this.bitOutputStream, this.blockValuesPresent, this.bwtBlock, this.blockLength);
@@ -252,7 +253,7 @@ public class BZip2BlockCompressor {
 	/**
 	 * @param bitOutputStream The stream to which compressed BZip2 data is written
 	 * @param blockSize The declared block size in bytes. Up to this many bytes will be accepted
-	 *                  into the block after Run-Lemgth Encoding is applied
+	 *                  into the block after Run-Length Encoding is applied
 	 */
 	public BZip2BlockCompressor (final BitOutputStream bitOutputStream, final int blockSize) {
 
@@ -261,7 +262,7 @@ public class BZip2BlockCompressor {
 		// One extra byte is added to allow for the block wrap applied in close()
 		this.block = new byte[blockSize + 1];
 		this.bwtBlock = new int[blockSize + 1];
-		this.blockLengthLimit = blockSize - 4; // 4 bytes for one RLE run
+		this.blockLengthLimit = blockSize - 6; // 5 bytes for one RLE run plus one byte - see {@link #write(int)}
 
 	}
 
