@@ -80,15 +80,16 @@ public class BZip2DivSufSort {
 
 
 	/**
-	 * @param array 
+	 * @param array1 
 	 * @param index1 
+	 * @param array2 
 	 * @param index2 
 	 */
-	private static final void swapElements (final int[] array, final int index1, final int index2) {
+	private static final void swapElements (final int[] array1, final int index1, final int[] array2, final int index2) {
 
-		final int temp = array[index1];
-		array[index1] = array[index2];
-		array[index2] = temp; 
+		final int temp = array1[index1];
+		array1[index1] = array2[index2];
+		array2[index2] = temp; 
 
 	}
 
@@ -238,7 +239,7 @@ public class BZip2DivSufSort {
 		if ((size % 2) == 0) {
 			m--;
 			if ((T[Td + SA[PA + SA[sa + (m / 2)]]] & 0xff) < (T[Td + SA[PA + SA[sa + m]]] & 0xff)) {
-				swapElements (SA, sa + m, sa + (m / 2));
+				swapElements (SA, sa + m, SA, sa + (m / 2));
 			}
 		}
 
@@ -247,7 +248,7 @@ public class BZip2DivSufSort {
 		}
 
 		if ((size % 2) == 0) {
-			swapElements (SA, sa, sa + m);
+			swapElements (SA, sa, SA, sa + m);
 			ssFixdown (Td, PA, sa, 0, m);
 		}
 
@@ -279,9 +280,12 @@ public class BZip2DivSufSort {
 		int T_v3 = T[Td + SA[PA + SA[v3]]] & 0xff;
 
 		if (T_v1 > T_v2) {
-			int temp = v1;
+			final int temp = v1;
 			v1 = v2;
 			v2 = temp;
+			final int T_vtemp = T_v1;
+			T_v1 = T_v2;
+			T_v2 = T_vtemp;
 		}
 		if (T_v2 > T_v3) {
 			if (T_v1 > T_v3) {
@@ -315,37 +319,59 @@ public class BZip2DivSufSort {
 		int T_v4 = T[Td + SA[PA + SA[v4]]] & 0xff;
 		int T_v5 = T[Td + SA[PA + SA[v5]]] & 0xff;
 		int temp;
+		int T_vtemp;
 
 		if (T_v2 > T_v3) {
 			temp = v2;
 			v2 = v3;
 			v3 = temp;
+			T_vtemp = T_v2;
+			T_v2 = T_v3;
+			T_v3 = T_vtemp;
 		}
 		if (T_v4 > T_v5) {
 			temp = v4;
 			v4 = v5;
 			v5 = temp;
+			T_vtemp = T_v4;
+			T_v4 = T_v5;
+			T_v5 = T_vtemp;
 		}
 		if (T_v2 > T_v4) {
 			temp = v2;
 			v2 = v4;
 			v4 = temp;
+			T_vtemp = T_v2;
+			T_v2 = T_v4;
+			T_v4 = T_vtemp;
 			temp = v3;
 			v3 = v5;
 			v5 = temp;
+			T_vtemp = T_v3;
+			T_v3 = T_v5;
+			T_v5 = T_vtemp;
 		}
 		if (T_v1 > T_v3) {
 			temp = v1;
 			v1 = v3;
 			v3 = temp;
+			T_vtemp = T_v1;
+			T_v1 = T_v3;
+			T_v3 = T_vtemp;
 		}
 		if (T_v1 > T_v4) {
 			temp = v1;
 			v1 = v4;
 			v4 = temp;
+			T_vtemp = T_v1;
+			T_v1 = T_v4;
+			T_v4 = T_vtemp;
 			temp = v3;
 			v3 = v5;
 			v5 = temp;
+			T_vtemp = T_v3;
+			T_v3 = T_v5;
+			T_v5 = T_vtemp;
 		}
 		if (T_v3 > T_v4) {
 			return v4;
@@ -517,7 +543,7 @@ public class BZip2DivSufSort {
 						first = a;
 					}
 				}
-				if ((T[Td + SA[PA + SA[first] - 1]] & 0xff) < v) {
+				if ((T[Td + SA[PA + SA[first]] - 1] & 0xff) < v) {
 					first = ssSubstringPartition (PA, first, a, depth);
 				}
 				if ((a - first) <= (last - a)) {
@@ -546,13 +572,13 @@ public class BZip2DivSufSort {
 
 			a = ssPivot (Td, PA, first, last);
 			v = T[Td + SA[PA + SA[a]]] & 0xff;
-			swapElements (SA, first, a);
+			swapElements (SA, first, SA, a);
 
 			for (b = first; (++b < last) && ((x = (T[Td + SA[PA + SA[b]]] & 0xff)) == v););
 			if (((a = b) < last) && (x < v)) {
 				for (; (++b < last) && ((x = (T[Td + SA[PA + SA[b]]] & 0xff)) <= v);) {
 					if (x == v) {
-						swapElements (SA, b, a);
+						swapElements (SA, b, SA, a);
 						++a;
 					}
 				}
@@ -561,22 +587,22 @@ public class BZip2DivSufSort {
 			if ((b < (d = c)) && (x > v)) {
 				for (; (b < --c) && ((x = (T[Td + SA[PA + SA[c]]] & 0xff)) >= v);) {
 					if (x == v) {
-						swapElements (SA, c, d);
+						swapElements (SA, c, SA, d);
 						--d;
 					}
 				}
 			}
 			for (; b < c;) {
-				swapElements (SA, b, c);
+				swapElements (SA, b, SA, c);
 				for (; (++b < c) && ((x = (T[Td + SA[PA + SA[b]]] & 0xff)) <= v);) {
 					if (x == v) {
-						swapElements (SA, b, a);
+						swapElements (SA, b, SA, a);
 						++a;
 					}
 				}
 				for (; (b < --c) && ((x = (T[Td + SA[PA + SA[c]]] & 0xff)) >= v);) {
 					if (x == v) { 
-						swapElements (SA, c, d);
+						swapElements (SA, c, SA, d);
 						--d;
 					}
 				}
@@ -589,13 +615,13 @@ public class BZip2DivSufSort {
 					s = t;
 				}
 				for (e = first, f = b - s; 0 < s; --s, ++e, ++f) {
-					swapElements (SA, e, f);
+					swapElements (SA, e, SA, f);
 				}
 				if ((s = d - c) > (t = last - d - 1)) {
 					s = t;
 				}
 				for (e = b, f = last - s; 0 < s; --s, ++e, ++f) {
-					swapElements (SA, e, f);
+					swapElements (SA, e, SA, f);
 				}
 
 				a = first + (b - a);
@@ -650,18 +676,18 @@ public class BZip2DivSufSort {
 
 
 	/**
+	 * @param array1 
 	 * @param first1
+	 * @param array2 
 	 * @param first2
 	 * @param size
 	 */
-	private void ssBlockSwap (final int first1, final int first2, final int size) {
-
-		final int[] SA = this.SA;
+	private void ssBlockSwap (final int[] array1, final int first1, final int[] array2, final int first2, final int size) {
 
 		int a, b;
 		int i;
 		for (i = size, a = first1, b = first2; 0 < i; --i, ++a, ++b) {
-			swapElements (SA, a, b);
+			swapElements (array1, a, array2, b);
 		}
 
 	}
@@ -669,13 +695,14 @@ public class BZip2DivSufSort {
 
 	/**
 	 * @param PA
-	 * @param buf
+	 * @param buf 
+	 * @param bufoffset
 	 * @param first
 	 * @param middle
 	 * @param last
 	 * @param depth
 	 */
-	private void ssMergeForward (final int PA, final int buf, final int first, final int middle, final int last, final int depth) {
+	private void ssMergeForward (final int PA, int[] buf, final int bufoffset, final int first, final int middle, final int last, final int depth) {
 
 		final int[] SA = this.SA;
 
@@ -684,50 +711,50 @@ public class BZip2DivSufSort {
 		int t;
 		int r;
 
-		bufend = buf + (middle - first) - 1;
-		ssBlockSwap (buf, first, middle - first);
+		bufend = bufoffset + (middle - first) - 1;
+		ssBlockSwap (buf, bufoffset, SA, first, middle - first);
 
-		for (t = SA[first], i = first, j = buf, k = middle;;) {
-			r = ssCompare (PA + SA[j], PA + SA[k], depth);
+		for (t = SA[first], i = first, j = bufoffset, k = middle;;) {
+			r = ssCompare (PA + buf[j], PA + SA[k], depth);
 			if (r < 0) {
 				do {
-					SA[i++] = SA[j];
+					SA[i++] = buf[j];
 					if (bufend <= j) {
-						SA[j] = t;
+						buf[j] = t;
 						return;
 					}
-					SA[j++] = SA[i];
-				} while (SA[j] < 0);
+					buf[j++] = SA[i];
+				} while (buf[j] < 0);
 			} else if (r > 0) {
 				do {
 					SA[i++] = SA[k];
 					SA[k++] = SA[i];
 					if (last <= k) {
-						while (j < bufend) { SA[i++] = SA[j]; SA[j++] = SA[i]; }
-						SA[i] = SA[j]; SA[j] = SA[t];
+						while (j < bufend) { SA[i++] = buf[j]; buf[j++] = SA[i]; }
+						SA[i] = buf[j]; buf[j] = t;
 						return;
 					}
 				} while (SA[k] < 0);
 			} else {
 				SA[k] = ~SA[k];
 				do {
-					SA[i++] = SA[j];
+					SA[i++] = buf[j];
 					if (bufend <= j) {
-						SA[j] = t;
+						buf[j] = t;
 						return;
 					}
-					SA[j++] = SA[i];
-				} while (SA[j] < 0);
+					buf[j++] = SA[i];
+				} while (buf[j] < 0);
 
 				do {
 					SA[i++] = SA[k];
 					SA[k++] = SA[i];
 					if (last <= k) {
 						while (j < bufend) {
-							SA[i++] = SA[j];
-							SA[j++] = SA[i];
+							SA[i++] = buf[j];
+							buf[j++] = SA[i];
 						}
-						SA[i] = SA[j]; SA[j] = t;
+						SA[i] = buf[j]; buf[j] = t;
 						return;
 					}
 				} while (SA[k] < 0);
@@ -739,13 +766,15 @@ public class BZip2DivSufSort {
 
 	/**
 	 * @param PA
+	 * @param buf 
 	 * @param buf
+	 * @param bufoffset 
 	 * @param first
 	 * @param middle
 	 * @param last
 	 * @param depth
 	 */
-	private void ssMergeBackward (final int PA, final int buf, final int first, final int middle, final int last, final int depth) {
+	private void ssMergeBackward (final int PA, int[] buf, final int bufoffset, final int first, final int middle, final int last, final int depth) {
 
 		final int[] SA = this.SA;
 
@@ -756,15 +785,15 @@ public class BZip2DivSufSort {
 		int r;
 		int x;
 
-		bufend = buf + (last - middle);
-		ssBlockSwap (buf, middle, last - middle);
+		bufend = bufoffset + (last - middle);
+		ssBlockSwap (buf, bufoffset, SA, middle, last - middle);
 
 		x = 0;
-		if (SA[bufend - 1] < 0) {
+		if (buf[bufend - 1] < 0) {
 			x |=  1;
-			p1 = PA + ~SA[bufend - 1];
+			p1 = PA + ~buf[bufend - 1];
 		} else {
-			p1 = PA +  SA[bufend - 1];
+			p1 = PA +  buf[bufend - 1];
 		}
 		if (SA[middle - 1] < 0) {
 			x |=  2;
@@ -778,23 +807,23 @@ public class BZip2DivSufSort {
 			if (r > 0) {
 				if ((x & 1) != 0) {
 					do {
-						SA[i--] = SA[j];
-						SA[j--] = SA[i];
-					} while (SA[j] < 0);
+						SA[i--] = buf[j];
+						buf[j--] = SA[i];
+					} while (buf[j] < 0);
 					x ^= 1;
 				}
-				SA[i--] = SA[j];
-				if (j <= buf) {
-					SA[j] = t;
+				SA[i--] = buf[j];
+				if (j <= bufoffset) {
+					buf[j] = t;
 					return;
 				}
-				SA[j--] = SA[i];
+				buf[j--] = SA[i];
 
-				if (SA[j] < 0) {
+				if (buf[j] < 0) {
 					x |=  1;
-					p1 = PA + ~SA[j];
+					p1 = PA + ~buf[j];
 				} else {
-					p1 = PA +  SA[j];
+					p1 = PA +  buf[j];
 				}
 			} else if (r < 0) {
 				if ((x & 2) != 0) {
@@ -807,12 +836,12 @@ public class BZip2DivSufSort {
 				SA[i--] = SA[k];
 				SA[k--] = SA[i];
 				if (k < first) {
-					while (buf < j) {
-						SA[i--] = SA[j];
-						SA[j--] = SA[i];
+					while (bufoffset < j) {
+						SA[i--] = buf[j];
+						buf[j--] = SA[i];
 					}
-					SA[i] = SA[j];
-					SA[j] = t;
+					SA[i] = buf[j];
+					buf[j] = t;
 					return;
 				}
 
@@ -825,17 +854,17 @@ public class BZip2DivSufSort {
 			} else {
 				if ((x & 1) != 0) {
 					do {
-						SA[i--] = SA[j];
-						SA[j--] = SA[i];
-					} while (SA[j] < 0);
+						SA[i--] = buf[j];
+						buf[j--] = SA[i];
+					} while (buf[j] < 0);
 					x ^= 1;
 				}
-				SA[i--] = ~SA[j];
-				if (j <= buf) {
-					SA[j] = t;
+				SA[i--] = ~buf[j];
+				if (j <= bufoffset) {
+					buf[j] = t;
 					return;
 				}
-				SA[j--] = SA[i];
+				buf[j--] = SA[i];
 
 				if ((x & 2) != 0) {
 					do {
@@ -847,20 +876,20 @@ public class BZip2DivSufSort {
 				SA[i--] = SA[k];
 				SA[k--] = SA[i];
 				if (k < first) {
-					while (buf < j) {
-						SA[i--] = SA[j];
-						SA[j--] = SA[i];
+					while (bufoffset < j) {
+						SA[i--] = buf[j];
+						buf[j--] = SA[i];
 					}
-					SA[i] = SA[j];
-					SA[j] = t;
+					SA[i] = buf[j];
+					buf[j] = t;
 					return;
 				}
 
-				if (SA[j] < 0) {
+				if (buf[j] < 0) {
 					x |=  1;
-					p1 = PA + ~SA[j];
+					p1 = PA + ~buf[j];
 				} else {
-					p1 = PA +  SA[j];
+					p1 = PA +  buf[j];
 				}
 				if (SA[k] < 0) {
 					x |=  2;
@@ -909,11 +938,12 @@ public class BZip2DivSufSort {
 	 * @param first
 	 * @param middle
 	 * @param last
-	 * @param buf
+	 * @param buf 
+	 * @param bufoffset 
 	 * @param bufsize
 	 * @param depth
 	 */
-	private void ssMerge (final int PA, int first, int middle, int last, final int buf, final int bufsize, final int depth) {
+	private void ssMerge (final int PA, int first, int middle, int last, int[] buf, final int bufoffset, final int bufsize, final int depth) {
 
 		final int[] SA = this.SA;
 
@@ -928,8 +958,9 @@ public class BZip2DivSufSort {
 
 			if ((last - middle) <= bufsize) {
 				if ((first < middle) && (middle < last)) {
-					ssMergeBackward (PA, buf, first, middle, last, depth);
+					ssMergeBackward (PA, buf, bufoffset, first, middle, last, depth);
 				}
+
 				if ((check & 1) != 0) {
 					ssMergeCheckEqual (PA, depth, first);
 				}
@@ -947,7 +978,7 @@ public class BZip2DivSufSort {
 
 			if ((middle - first) <= bufsize) {
 				if (first < middle) {
-					ssMergeForward ( PA, buf, first, middle, last, depth);
+					ssMergeForward ( PA, buf, bufoffset, first, middle, last, depth);
 				}
 				if ((check & 1) != 0) {
 					ssMergeCheckEqual (PA, depth, first);
@@ -978,7 +1009,7 @@ public class BZip2DivSufSort {
 			}
 
 			if (0 < m) {
-				ssBlockSwap (middle - m, middle, m);
+				ssBlockSwap (SA, middle - m, SA, middle, m);
 				i = j = middle;
 				next = 0;
 				if ((middle + m) < last) {
@@ -1018,6 +1049,7 @@ public class BZip2DivSufSort {
 				last = entry.c;
 				check = entry.d;
 			}
+
 		}
 
 	}
@@ -1027,18 +1059,20 @@ public class BZip2DivSufSort {
 	 * @param PA
 	 * @param first
 	 * @param last
-	 * @param buf
+	 * @param buf 
+	 * @param bufoffset
 	 * @param bufsize
 	 * @param depth
 	 * @param lastsuffix
 	 * @param size
 	 */
-	private void subStringSort (final int PA, int first, final int last, final int buf, final int bufsize, final int depth, final boolean lastsuffix, final int size) {
+	private void subStringSort (final int PA, int first, final int last, final int[] buf, final int bufoffset, final int bufsize, final int depth, final boolean lastsuffix, final int size) {
 
 		final int[] SA = this.SA;
 
 		int a, b;
-		int curbuf;
+		int[] curbuf;
+		int curbufoffset;
 		int i, j, k;
 		int curbufsize;
 
@@ -1047,14 +1081,16 @@ public class BZip2DivSufSort {
 		}
 		for (a = first, i = 0; (a + SS_BLOCKSIZE) < last; a += SS_BLOCKSIZE, ++i) {
 			ssMultiKeyIntroSort (PA, a, a + SS_BLOCKSIZE, depth);
-			curbuf = a + SS_BLOCKSIZE;
+			curbuf = SA;
+			curbufoffset = a + SS_BLOCKSIZE;
 			curbufsize = last - (a + SS_BLOCKSIZE);
 			if (curbufsize <= bufsize) {
 				curbufsize = bufsize;
 				curbuf = buf;
+				curbufoffset = bufoffset;
 			}
-			for (b = a, k = SS_BLOCKSIZE, j = i; (j & 1) != 0; b -= k, k <<= 1, j >>= 1) {
-				ssMerge (PA, b - k, b, b + k, curbuf, curbufsize, depth);
+			for (b = a, k = SS_BLOCKSIZE, j = i; (j & 1) != 0; b -= k, k <<= 1, j >>>= 1) {
+				ssMerge (PA, b - k, b, b + k, curbuf, curbufoffset, curbufsize, depth);
 			}
 		}
 
@@ -1062,7 +1098,7 @@ public class BZip2DivSufSort {
 
 		for (k = SS_BLOCKSIZE; i != 0; k <<= 1, i >>= 1) {
 			if ((i & 1) != 0) {
-				ssMerge (PA, a - k, a, last, buf, bufsize, depth);
+				ssMerge (PA, a - k, a, last, buf, bufoffset, bufsize, depth);
 				a -= k;
 			}
 		}
@@ -1152,7 +1188,7 @@ public class BZip2DivSufSort {
 		if ((size % 2) == 0) {
 			m--;
 			if (trGetC (ISA, ISAd, ISAn, SA[sa + (m / 2)]) < trGetC (ISA, ISAd, ISAn, SA[sa + m])) {
-				swapElements (SA, sa + m, sa + (m / 2));
+				swapElements (SA, sa + m, SA, sa + (m / 2));
 			}
 		}
 
@@ -1161,7 +1197,7 @@ public class BZip2DivSufSort {
 		}
 
 		if ((size % 2) == 0) {
-			swapElements (SA, sa + 0, sa + m);
+			swapElements (SA, sa + 0, SA, sa + m);
 			trFixdown (ISA, ISAd, ISAn, sa, 0, m);
 		}
 
@@ -1233,14 +1269,17 @@ public class BZip2DivSufSort {
 
 		final int[] SA = this.SA;
 
-		final int SA_v1 = trGetC (ISA, ISAd, ISAn, SA[v1]);
-		final int SA_v2 = trGetC (ISA, ISAd, ISAn, SA[v2]);
-		final int SA_v3 = trGetC (ISA, ISAd, ISAn, SA[v3]);
+		int SA_v1 = trGetC (ISA, ISAd, ISAn, SA[v1]);
+		int SA_v2 = trGetC (ISA, ISAd, ISAn, SA[v2]);
+		int SA_v3 = trGetC (ISA, ISAd, ISAn, SA[v3]);
 
 		if (SA_v1 > SA_v2) {
-			int temp = v1;
+			final int temp = v1;
 			v1 = v2;
 			v2 = temp;
+			final int SA_vtemp = SA_v1;
+			SA_v1 = SA_v2;
+			SA_v2 = SA_vtemp;
 		}
 		if (SA_v2 > SA_v3) {
 			if (SA_v1 > SA_v3) {
@@ -1269,44 +1308,65 @@ public class BZip2DivSufSort {
 
 		final int[] SA = this.SA;
 
-		final int SA_v1 = trGetC (ISA, ISAd, ISAn, SA[v1]);
-		final int SA_v2 = trGetC (ISA, ISAd, ISAn, SA[v2]);
-		final int SA_v3 = trGetC (ISA, ISAd, ISAn, SA[v3]);
-		final int SA_v4 = trGetC (ISA, ISAd, ISAn, SA[v4]);
-		final int SA_v5 = trGetC (ISA, ISAd, ISAn, SA[v5]);
-
+		int SA_v1 = trGetC (ISA, ISAd, ISAn, SA[v1]);
+		int SA_v2 = trGetC (ISA, ISAd, ISAn, SA[v2]);
+		int SA_v3 = trGetC (ISA, ISAd, ISAn, SA[v3]);
+		int SA_v4 = trGetC (ISA, ISAd, ISAn, SA[v4]);
+		int SA_v5 = trGetC (ISA, ISAd, ISAn, SA[v5]);
 		int temp;
+		int SA_vtemp;
 
 		if (SA_v2 > SA_v3) {
 			temp = v2;
 			v2 = v3;
 			v3 = temp;
+			SA_vtemp = SA_v2;
+			SA_v2 = SA_v3;
+			SA_v3 = SA_vtemp;
 		}
 		if (SA_v4 > SA_v5) {
 			temp = v4;
 			v4 = v5;
 			v5 = temp;
+			SA_vtemp = SA_v4;
+			SA_v4 = SA_v5;
+			SA_v5 = SA_vtemp;
 		}
 		if (SA_v2 > SA_v4) {
 			temp = v2;
 			v2 = v4;
 			v4 = temp;
+			SA_vtemp = SA_v2;
+			SA_v2 = SA_v4;
+			SA_v4 = SA_vtemp;
 			temp = v3;
 			v3 = v5;
 			v5 = temp;
+			SA_vtemp = SA_v3;
+			SA_v3 = SA_v5;
+			SA_v5 = SA_vtemp;
 		}
 		if (SA_v1 > SA_v3) {
 			temp = v1;
 			v1 = v3;
 			v3 = temp;
+			SA_vtemp = SA_v1;
+			SA_v1 = SA_v3;
+			SA_v3 = SA_vtemp;
 		}
 		if (SA_v1 > SA_v4) {
 			temp = v1;
 			v1 = v4;
 			v4 = temp;
+			SA_vtemp = SA_v1;
+			SA_v1 = SA_v4;
+			SA_v4 = SA_vtemp;
 			temp = v3;
 			v3 = v5;
 			v5 = temp;
+			SA_vtemp = SA_v3;
+			SA_v3 = SA_v5;
+			SA_v5 = SA_vtemp;
 		}
 		if (SA_v3 > SA_v4) {
 			return v4;
@@ -1453,14 +1513,14 @@ public class BZip2DivSufSort {
 			}
 
 			a = trPivot (ISA, ISAd, ISAn, first, last);
-			swapElements (SA, first, a);
+			swapElements (SA, first, SA, a);
 			v = trGetC (ISA, ISAd, ISAn, SA[first]);
 
 			for (b = first; (++b < last) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) == v););
 			if (((a = b) < last) && (x < v)) {
 				for (; (++b < last) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) <= v);) {
 					if (x == v) {
-						swapElements (SA, b, a);
+						swapElements (SA, b, SA, a);
 						++a;
 					}
 				}
@@ -1469,22 +1529,22 @@ public class BZip2DivSufSort {
 			if ((b < (d = c)) && (x > v)) {
 				for (; (b < --c) && ((x = trGetC (ISA, ISAd, ISAn, SA[c])) >= v);) {
 					if (x == v) {
-						swapElements (SA, c, d);
+						swapElements (SA, c, SA, d);
 						--d;
 					}
 				}
 			}
 			for (; b < c;) {
-				swapElements (SA, b, c);
+				swapElements (SA, b, SA, c);
 				for (; (++b < c) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) <= v);) {
 					if (x == v) {
-						swapElements (SA, b, a);
+						swapElements (SA, b, SA, a);
 						++a;
 					}
 				}
 				for (; (b < --c) && ((x = trGetC (ISA, ISAd, ISAn, SA[c])) >= v);) {
 					if (x == v) {
-						swapElements (SA, c, d);
+						swapElements (SA, c, SA, d);
 						--d;
 					}
 				}
@@ -1497,13 +1557,13 @@ public class BZip2DivSufSort {
 					s = t;
 				}
 				for (e = first, f = b - s; 0 < s; --s, ++e, ++f) {
-					swapElements (SA, e, f);
+					swapElements (SA, e, SA, f);
 				}
 				if ((s = d - c) > (t = last - d - 1)) {
 					s = t;
 				}
 				for (e = b, f = last - s; 0 < s; --s, ++e, ++f) {
-					swapElements (SA, e, f);
+					swapElements (SA, e, SA, f);
 				}
 
 				a = first + (b - a);
@@ -1648,7 +1708,7 @@ public class BZip2DivSufSort {
 		if (((a = b) < last) && (x < v)) {
 			for (; (++b < last) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) <= v);) {
 				if (x == v) {
-					swapElements (SA, b, a); ++a;
+					swapElements (SA, b, SA, a); ++a;
 				}
 			}
 		}
@@ -1656,20 +1716,20 @@ public class BZip2DivSufSort {
 		if ((b < (d = c)) && (x > v)) {
 			for (; (b < --c) && ((x = trGetC (ISA, ISAd, ISAn, SA[c])) >= v);) {
 				if (x == v) {
-					swapElements (SA, c, d); --d;
+					swapElements (SA, c, SA, d); --d;
 				}
 			}
 		}
 		for (; b < c;) {
-			swapElements (SA, b, c);
+			swapElements (SA, b, SA, c);
 			for (; (++b < c) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) <= v);) {
 				if (x == v) {
-					swapElements (SA, b, a); ++a;
+					swapElements (SA, b, SA, a); ++a;
 				}
 			}
 			for (; (b < --c) && ((x = trGetC (ISA, ISAd, ISAn, SA[c])) >= v);) {
 				if (x == v) {
-					swapElements (SA, c, d); --d;
+					swapElements (SA, c, SA, d); --d;
 				}
 			}
 		}
@@ -1680,13 +1740,13 @@ public class BZip2DivSufSort {
 				s = t;
 			}
 			for (e = first, f = b - s; 0 < s; --s, ++e, ++f) {
-				swapElements (SA, e, f);
+				swapElements (SA, e, SA, f);
 			}
 			if ((s = d - c) > (t = last - d - 1)) {
 				s = t;
 			}
 			for (e = b, f = last - s; 0 < s; --s, ++e, ++f) {
-				swapElements (SA, e, f);
+				swapElements (SA, e, SA, f);
 			}
 			first += (b - a);
 			last -= (d - c);
@@ -1900,13 +1960,13 @@ public class BZip2DivSufSort {
 
 			a = trPivot (ISA, ISAd, ISAn, first, last);
 
-			swapElements (SA, first, a);
+			swapElements (SA, first, SA, a);
 			v = trGetC (ISA, ISAd, ISAn, SA[first]);
 			for (b = first; (++b < last) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) == v););
 			if (((a = b) < last) && (x < v)) {
 				for (; (++b < last) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) <= v);) {
 					if (x == v) {
-						swapElements (SA, b, a); ++a;
+						swapElements (SA, b, SA, a); ++a;
 					}
 				}
 			}
@@ -1914,22 +1974,22 @@ public class BZip2DivSufSort {
 			if ((b < (d = c)) && (x > v)) {
 				for (; (b < --c) && ((x = trGetC (ISA, ISAd, ISAn, SA[c])) >= v);) {
 					if (x == v) {
-						swapElements (SA, c, d);
+						swapElements (SA, c, SA, d);
 						--d;
 					}
 				}
 			}
 			for (; b < c;) {
-				swapElements (SA, b, c);
+				swapElements (SA, b, SA, c);
 				for (; (++b < c) && ((x = trGetC (ISA, ISAd, ISAn, SA[b])) <= v);) {
 					if (x == v) {
-						swapElements (SA, b, a);
+						swapElements (SA, b, SA, a);
 						++a;
 					}
 				}
 				for (; (b < --c) && ((x = trGetC (ISA, ISAd, ISAn, SA[c])) >= v);) {
 					if (x == v) {
-						swapElements (SA, c, d);
+						swapElements (SA, c, SA, d);
 						--d;
 					}
 				}
@@ -1942,13 +2002,13 @@ public class BZip2DivSufSort {
 					s = t;
 				}
 				for (e = first, f = b - s; 0 < s; --s, ++e, ++f) {
-					swapElements (SA, e, f);
+					swapElements (SA, e, SA, f);
 				}
 				if ((s = d - c) > (t = last - d - 1)) {
 					s = t;
 				}
 				for (e = b, f = last - s; 0 < s; --s, ++e, ++f) {
-					swapElements (SA, e, f);
+					swapElements (SA, e, SA, f);
 				}
 
 				a = first + (b - a);
@@ -2195,8 +2255,10 @@ public class BZip2DivSufSort {
 		final byte[] T = this.T;
 		final int[] SA = this.SA;
 		final int n = this.n;
+		final int[] tempbuf = new int[256];
 
-		int PAb, ISAb, buf;
+		int[] buf;
+		int PAb, ISAb, bufoffset;
 		int i, j, k, t, m, bufsize;
 		int c0, c1;
 		int flag;
@@ -2269,17 +2331,20 @@ public class BZip2DivSufSort {
 		c1 = T[t + 1] & 0xff;
 		SA[--bucketB[BUCKET_BSTAR (c0, c1)]] = m - 1;
 
-		buf = m;
+		buf = SA;
+		bufoffset = m;
 		bufsize = n - (2 * m);
 		if (bufsize <= 256) {
-			buf = 0;
+			buf = tempbuf;
+			bufoffset = 0;
 			bufsize = 256;
 		}
+
 		for (c0 = 255, j = m; 0 < j; --c0) {
 			for (c1 = 255; c0 < c1; j = i, --c1) {
 				i = bucketB[BUCKET_BSTAR (c0, c1)];
 				if (1 < (j - i)) {
-					subStringSort (PAb, i, j, buf, bufsize, 2, SA[i] == (m - 1), n);
+					subStringSort (PAb, i, j, buf, bufoffset, bufsize, 2, SA[i] == (m - 1), n);
 				}
 			}
 		}
@@ -2448,7 +2513,7 @@ public class BZip2DivSufSort {
 			return constructBWT (bucketA, bucketB);
 		}
 
-		return -1;
+		return 0;
 
 	}
 

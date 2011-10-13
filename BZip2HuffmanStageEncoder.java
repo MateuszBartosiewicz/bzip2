@@ -159,7 +159,7 @@ class BZip2HuffmanStageEncoder {
 						if (repeatCount < 2) {
 							break;
 						}
-						repeatCount = (repeatCount - 2) >> 1;
+						repeatCount = (repeatCount - 2) >>> 1;
 					}
 					repeatCount = 0;
 				}
@@ -183,7 +183,7 @@ class BZip2HuffmanStageEncoder {
 				if (repeatCount < 2) {
 					break;
 				}
-				repeatCount = (repeatCount - 2) >> 1;
+				repeatCount = (repeatCount - 2) >>> 1;
 			}
 		}
 
@@ -311,7 +311,7 @@ class BZip2HuffmanStageEncoder {
 				}
 				Arrays.sort (sortedFrequencyMap);
 				for (int j = 0; j < huffmanAlphabetSize; j++) {
-					sortedFrequencies[j] = sortedFrequencyMap[j] >> 9;
+					sortedFrequencies[j] = sortedFrequencyMap[j] >>> 9;
 				}
 
 				HuffmanAllocator.allocateHuffmanCodeLengths (sortedFrequencies, BZip2Constants.HUFFMAN_ENCODE_MAXIMUM_CODE_LENGTH);
@@ -480,7 +480,7 @@ class BZip2HuffmanStageEncoder {
 
 			while (mtfIndex <= groupEnd) {
 				final int mergedCodeSymbol = tableMergedCodeSymbols[mtf[mtfIndex++]];
-				bitOutputStream.writeBits (mergedCodeSymbol >> 24, mergedCodeSymbol);
+				bitOutputStream.writeBits (mergedCodeSymbol >>> 24, mergedCodeSymbol);
 			}
 		}
 

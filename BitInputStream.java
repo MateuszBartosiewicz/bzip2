@@ -144,7 +144,7 @@ public class BitInputStream {
 		bitCount -= count;
 		this.bitCount = bitCount;
 
-		return (bitBuffer >> bitCount) & ((1 << count) - 1);
+		return (bitBuffer >>> bitCount) & ((1 << count) - 1);
 
 	}
 
