@@ -209,7 +209,7 @@ public class BZip2BlockDecompressor {
 		int huffmanSymbolCount = 0;
 
 		for (int i = 0; i < 16; i++) {
-			if ((huffmanUsedRanges & ((1 << 15) >> i)) != 0) {
+			if ((huffmanUsedRanges & ((1 << 15) >>> i)) != 0) {
 				for (int j = 0, k = i << 4; j < 16; j++, k++) {
 					if (bitInputStream.readBoolean()) {
 						huffmanSymbolMap[huffmanSymbolCount++] = (byte)k;
@@ -293,15 +293,16 @@ public class BZip2BlockDecompressor {
 				if (nextSymbol == huffmanEndOfBlockSymbol)
 					break;
 
+				if (bwtBlockLength >= streamBlockSize) {
+					throw new IOException ("BZip2 block exceeds declared block size");
+				}
+
 				mtfValue = symbolMTF.indexToFront (nextSymbol - 1) & 0xff;
 
 				final byte nextByte = huffmanSymbolMap[mtfValue];
 				bwtByteCounts[nextByte & 0xff]++;
 				bwtBlock[bwtBlockLength++] = nextByte;
 
-				if (bwtBlockLength >= streamBlockSize) {
-					throw new IOException ("BZip2 block exceeds declared block size");
-				}
 			}
 		}
 
@@ -356,7 +357,7 @@ public class BZip2BlockDecompressor {
 
 		int mergedPointer = this.bwtCurrentMergedPointer;
 		int nextDecodedByte =  mergedPointer & 0xff;
-		this.bwtCurrentMergedPointer = this.bwtMergedPointers[mergedPointer >> 8];
+		this.bwtCurrentMergedPointer = this.bwtMergedPointers[mergedPointer >>> 8];
 
 		if (this.blockRandomised) {
 			if (--this.randomCount == 0) {
