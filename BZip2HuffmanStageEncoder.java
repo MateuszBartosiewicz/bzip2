@@ -47,7 +47,7 @@ class BZip2HuffmanStageEncoder {
 	private final int[] bwtBlock;
 
 	/**
-	 * Actual length of the BWT data
+	 * Actual length of the data in the {@link bwtBlock} array
 	 */
 	private int bwtLength;
 
@@ -63,7 +63,7 @@ class BZip2HuffmanStageEncoder {
 	private final char[] mtfBlock;
 
 	/**
-	 * The actual number of values contained in the {@link mtf} array
+	 * The actual number of values contained in the {@link mtfBlock} array
 	 */
 	private int mtfLength;
 
@@ -73,7 +73,7 @@ class BZip2HuffmanStageEncoder {
 	private int huffmanAlphabetSize;
 
 	/**
-	 * The global frequencies of values within the {@link mtf} array
+	 * The global frequencies of values within the {@link mtfBlock} array
 	 */
 	private final int[] mtfSymbolFrequencies = new int[BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
 
@@ -167,6 +167,7 @@ class BZip2HuffmanStageEncoder {
 				mtfBlock[mtfIndex++] = (char) (mtfPosition + 1);
 				mtfSymbolFrequencies[mtfPosition + 1]++;
 			}
+
 		}
 
 		if (repeatCount > 0) {
@@ -517,7 +518,7 @@ class BZip2HuffmanStageEncoder {
 	public BZip2HuffmanStageEncoder (final BitOutputStream bitOutputStream, final boolean[] bwtValuesInUse, final int[] bwtBlock, final int bwtLength) {
 
 		this.bitOutputStream = bitOutputStream;
-		this.mtfBlock = new char[2 * bwtBlock.length];
+		this.mtfBlock = new char[bwtLength + 1];
 		this.bwtValuesInUse = bwtValuesInUse;
 		this.bwtBlock = bwtBlock;
 		this.bwtLength = bwtLength;
