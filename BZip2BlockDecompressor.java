@@ -223,6 +223,15 @@ public class BZip2BlockDecompressor {
 		/* Read total number of tables and selectors*/
 		final int totalTables = bitInputStream.readBits (3);
 		final int totalSelectors = bitInputStream.readBits (15);
+		if (
+				   (totalTables < BZip2Constants.HUFFMAN_MINIMUM_TABLES)
+				|| (totalTables > BZip2Constants.HUFFMAN_MAXIMUM_TABLES)
+				|| (totalSelectors < 1)
+				|| (totalSelectors > BZip2Constants.HUFFMAN_MAXIMUM_SELECTORS)
+		   )
+		{
+			throw new IOException ("BZip2 block Huffman tables invalid");
+		}
 
 		/* Read and decode MTFed Huffman selector list */
 		final MoveToFront tableMTF = new MoveToFront();

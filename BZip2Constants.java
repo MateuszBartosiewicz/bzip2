@@ -59,6 +59,11 @@ interface BZip2Constants {
 	static final int HUFFMAN_DECODE_MAXIMUM_CODE_LENGTH = 23;
 
 	/**
+	 * Minimum number of alternative Huffman tables
+	 */
+	static final int HUFFMAN_MINIMUM_TABLES = 2;
+
+	/**
 	 * Maximum number of alternative Huffman tables
 	 */
 	static final int HUFFMAN_MAXIMUM_TABLES = 6;
@@ -66,7 +71,7 @@ interface BZip2Constants {
 	/**
 	 * Maximum possible number of Huffman table selectors
 	 */
-	static final int HUFFMAN_MAXIMUM_SELECTORS = ((900000 / HUFFMAN_GROUP_RUN_LENGTH) + 2);
+	static final int HUFFMAN_MAXIMUM_SELECTORS = (900000 / HUFFMAN_GROUP_RUN_LENGTH) + 1;
 
 	/**
 	 * Huffman symbol used for run-length encoding
