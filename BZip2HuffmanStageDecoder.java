@@ -147,7 +147,11 @@ public class BZip2HuffmanStageDecoder {
 
 		// Move to next group selector if required
 		if (((++this.groupPosition % BZip2Constants.HUFFMAN_GROUP_RUN_LENGTH) == 0)) {
-			this.currentTable = this.selectors[++this.groupIndex] & 0xff;
+			this.groupIndex++;
+			if (this.groupIndex == this.selectors.length) {
+				throw new IOException ("Error decoding BZip2 block");
+			}
+			this.currentTable = this.selectors[this.groupIndex] & 0xff;
 		}
 
 		final int currentTable = this.currentTable;
