@@ -56,7 +56,7 @@ public class BZip2BlockCompressor {
 	private final byte[] block;
 
 	/**
-	 * Current length of the RLE'd block data
+	 * Current length of the data within the {@link block} array
 	 */
 	private int blockLength = 0;
 
@@ -66,8 +66,8 @@ public class BZip2BlockCompressor {
 	private final int blockLengthLimit;
 
 	/**
-	 * For each index, {@code true} if that value is present in the block data, otherwise
-	 * {@code false}
+	 * The values that are present within the RLE'd block data. For each index, {@code true} if that
+	 * value is present within the data, otherwise {@code false}
 	 */
 	private final boolean[] blockValuesPresent = new boolean[256];
 
@@ -85,6 +85,40 @@ public class BZip2BlockCompressor {
 	 * The repeat count of the current RLE value
 	 */
 	private int rleLength = 0;
+
+
+	/**
+	 * Write the Huffman symbol to output byte map
+	 * @throws IOException on any I/O error writing the data
+	 */
+	private void writeSymbolMap() throws IOException {
+
+		BitOutputStream bitOutputStream = this.bitOutputStream;
+
+		final boolean[] blockValuesPresent = this.blockValuesPresent;
+		final boolean[] condensedInUse = new boolean[16];
+
+		for (int i = 0; i < 16; i++) {
+			for (int j = 0, k = i << 4; j < 16; j++, k++) {
+				if (blockValuesPresent[k]) {
+					condensedInUse[i] = true;
+				}
+			}
+		}
+
+		for (int i = 0; i < 16; i++) {
+			bitOutputStream.writeBoolean (condensedInUse[i]);
+		}
+
+		for (int i = 0; i < 16; i++) {
+			if (condensedInUse[i]) {
+				for (int j = 0, k = i * 16; j < 16; j++, k++) {
+					bitOutputStream.writeBoolean (blockValuesPresent[k]);
+				}
+			}
+		}
+
+	}
 
 
 	/**
@@ -220,8 +254,15 @@ public class BZip2BlockCompressor {
 		this.bitOutputStream.writeBoolean (false); // Randomised block flag. We never create randomised blocks
 		this.bitOutputStream.writeBits (24, bwtStartPointer);
 
+		// Write out the symbol map
+		writeSymbolMap();
+
+		// Perform the Move To Front Transform and Run-Length Encoding[2] stages 
+		BZip2MTFAndRLE2StageEncoder mtfEncoder = new BZip2MTFAndRLE2StageEncoder (this.bwtBlock, this.blockLength, this.blockValuesPresent);
+		mtfEncoder.encode();
+
 		// Perform the Huffman Encoding stage and write out the encoded data
-		BZip2HuffmanStageEncoder huffmanEncoder = new BZip2HuffmanStageEncoder (this.bitOutputStream, this.blockValuesPresent, this.bwtBlock, this.blockLength);
+		BZip2HuffmanStageEncoder huffmanEncoder = new BZip2HuffmanStageEncoder (this.bitOutputStream, mtfEncoder.getMtfBlock(), mtfEncoder.getMtfLength(), mtfEncoder.getMtfAlphabetSize(), mtfEncoder.getMtfSymbolFrequencies());
 		huffmanEncoder.encode();
 
 	}

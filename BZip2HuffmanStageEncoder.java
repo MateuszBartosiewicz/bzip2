@@ -42,23 +42,7 @@ class BZip2HuffmanStageEncoder {
 	private final BitOutputStream bitOutputStream;
 
 	/**
-	 * The Burrows-Wheeler transformed block
-	 */
-	private final int[] bwtBlock;
-
-	/**
-	 * Actual length of the data in the {@link bwtBlock} array
-	 */
-	private int bwtLength;
-
-	/**
-	 * At each position, {@code true} if the byte value with that index is present within the block,
-	 * otherwise {@code false} 
-	 */
-	private final boolean[] bwtValuesInUse;
-
-	/**
-	 * The output of the Move To Front stage
+	 * The output of the Move To Front Transform and Run Length Encoding[2] stages
 	 */
 	private final char[] mtfBlock;
 
@@ -68,14 +52,14 @@ class BZip2HuffmanStageEncoder {
 	private int mtfLength;
 
 	/**
-	 * The Huffman alphabet size
+	 * The number of unique values in the {@link mtfBlock} array
 	 */
-	private int huffmanAlphabetSize;
+	private int mtfAlphabetSize;
 
 	/**
 	 * The global frequencies of values within the {@link mtfBlock} array
 	 */
-	private final int[] mtfSymbolFrequencies = new int[BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
+	private final int[] mtfSymbolFrequencies;
 
 	/**
 	 * The lengths of the Canonical Huffman codes for each table
@@ -110,96 +94,6 @@ class BZip2HuffmanStageEncoder {
 
 
 	/**
-	 * Performs the Move To Front transform and Run Length Encoding[1] stages
-	 */
-	private void moveToFrontAndRunLengthEncode() {
-
-		final int bwtLength = this.bwtLength;
-		final boolean[] bwtValuesInUse = this.bwtValuesInUse;
-		final int[] bwtBlock = this.bwtBlock;
-		final char[] mtfBlock = this.mtfBlock;
-		final int[] mtfSymbolFrequencies = this.mtfSymbolFrequencies;
-		final byte[] huffmanSymbolMap = new byte[256];
-		final MoveToFront symbolMTF = new MoveToFront();
-
-		int totalUniqueValues = 0;
-		for (int i = 0; i < 256; i++) {
-			if (bwtValuesInUse[i]) {
-				huffmanSymbolMap[i] = (byte) totalUniqueValues++;
-			}
-		}
-
-		final int endOfBlockSymbol = totalUniqueValues + 1;
-
-		int mtfIndex = 0;
-		int repeatCount = 0;
-		int totalRunAs = 0;
-		int totalRunBs = 0;
-
-		for (int i = 0; i < bwtLength; i++) {
-
-			// Move To Front
-			int mtfPosition = symbolMTF.valueToFront (huffmanSymbolMap[bwtBlock[i] & 0xff]);
-
-			// Run Length Encode
-			if (mtfPosition == 0) {
-				repeatCount++;
-			} else {
-				if (repeatCount > 0) {
-					repeatCount--;
-					while (true) {
-						if ((repeatCount & 1) == 0) {
-							mtfBlock[mtfIndex++] = BZip2Constants.HUFFMAN_SYMBOL_RUNA;
-							totalRunAs++;
-						} else {
-							mtfBlock[mtfIndex++] = BZip2Constants.HUFFMAN_SYMBOL_RUNB;
-							totalRunBs++;
-						}
-
-						if (repeatCount < 2) {
-							break;
-						}
-						repeatCount = (repeatCount - 2) >>> 1;
-					}
-					repeatCount = 0;
-				}
-
-				mtfBlock[mtfIndex++] = (char) (mtfPosition + 1);
-				mtfSymbolFrequencies[mtfPosition + 1]++;
-			}
-
-		}
-
-		if (repeatCount > 0) {
-			repeatCount--;
-			while (true) {
-				if ((repeatCount & 1) == 0) {
-					mtfBlock[mtfIndex++] = BZip2Constants.HUFFMAN_SYMBOL_RUNA;
-					totalRunAs++;
-				} else {
-					mtfBlock[mtfIndex++] = BZip2Constants.HUFFMAN_SYMBOL_RUNB;
-					totalRunBs++;
-				}
-
-				if (repeatCount < 2) {
-					break;
-				}
-				repeatCount = (repeatCount - 2) >>> 1;
-			}
-		}
-
-		mtfBlock[mtfIndex] = (char) endOfBlockSymbol;
-		mtfSymbolFrequencies[endOfBlockSymbol]++;
-		mtfSymbolFrequencies[BZip2Constants.HUFFMAN_SYMBOL_RUNA] += totalRunAs;
-		mtfSymbolFrequencies[BZip2Constants.HUFFMAN_SYMBOL_RUNB] += totalRunBs;
-
-		this.mtfLength = mtfIndex + 1;
-		this.huffmanAlphabetSize = totalUniqueValues + 2;
-
-	}
-
-
-	/**
 	 * Generate initial Huffman code length tables, giving each table a different low cost section
 	 * of the alphabet that is roughly equal in overall cumulative frequency. Note that the initial
 	 * tables are invalid for actual Huffman code generation, and only serve as the seed for later
@@ -210,7 +104,7 @@ class BZip2HuffmanStageEncoder {
 
 		final int[][] huffmanCodeLengths = this.huffmanCodeLengths;
 		final int[] mtfSymbolFrequencies = this.mtfSymbolFrequencies;
-		final int huffmanAlphabetSize = this.huffmanAlphabetSize;
+		final int mtfAlphabetSize = this.mtfAlphabetSize;
 
 		int remainingLength = this.mtfLength;
 		int lowCostEnd = -1;
@@ -221,7 +115,7 @@ class BZip2HuffmanStageEncoder {
 			final int lowCostStart = lowCostEnd + 1;
 			int actualCumulativeFrequency = 0;
 
-			while ((actualCumulativeFrequency < targetCumulativeFrequency) && (lowCostEnd < (huffmanAlphabetSize - 1))) {
+			while ((actualCumulativeFrequency < targetCumulativeFrequency) && (lowCostEnd < (mtfAlphabetSize - 1))) {
 				actualCumulativeFrequency += mtfSymbolFrequencies[++lowCostEnd];
 			}
 
@@ -230,7 +124,7 @@ class BZip2HuffmanStageEncoder {
 			}
 
 			final int[] tableCodeLengths = huffmanCodeLengths[i];
-			for (int j = 0; j < huffmanAlphabetSize; j++) {
+			for (int j = 0; j < mtfAlphabetSize; j++) {
 				if ((j < lowCostStart) || (j > lowCostEnd)) {
 					tableCodeLengths[j] = HUFFMAN_HIGH_SYMBOL_COST;
 				}
@@ -256,16 +150,16 @@ class BZip2HuffmanStageEncoder {
 		final byte[] selectors = this.selectors;
 		final int[][] huffmanCodeLengths = this.huffmanCodeLengths;
 		final int mtfLength = this.mtfLength;
-		final int huffmanAlphabetSize = this.huffmanAlphabetSize;
+		final int mtfAlphabetSize = this.mtfAlphabetSize;
 
-		final int[] sortedFrequencyMap = new int[huffmanAlphabetSize];
-		final int[] sortedFrequencies = new int[huffmanAlphabetSize];
+		final int[] sortedFrequencyMap = new int[mtfAlphabetSize];
+		final int[] sortedFrequencies = new int[mtfAlphabetSize];
 
 		int selectorIndex = 0;
 
 		for (int iteration = MAXIMUM_ITERATIONS - 1; iteration >= 0; iteration--) {
 
-			int[][] tableFrequencies = new int[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][huffmanAlphabetSize];
+			int[][] tableFrequencies = new int[totalTables][mtfAlphabetSize];
 			selectorIndex = 0;
 
 			// Find the best table for each group based on the current Huffman code lengths
@@ -273,7 +167,7 @@ class BZip2HuffmanStageEncoder {
 
 				final int groupEnd = Math.min (groupStart + BZip2Constants.HUFFMAN_GROUP_RUN_LENGTH - 1, mtfLength - 1);
 
-				short[] cost = new short[BZip2Constants.HUFFMAN_MAXIMUM_TABLES];
+				short[] cost = new short[totalTables];
 				for (int i = groupStart; i <= groupEnd; i++) {
 					final int value = mtf[i];
 					for (int j = 0; j < totalTables; j++) {
@@ -307,17 +201,17 @@ class BZip2HuffmanStageEncoder {
 			// Calculate new Huffman code lengths based on the table frequencies accumulated in this iteration
 			for (int i = 0; i < totalTables; i++) {
 
-				for (int j = 0; j < huffmanAlphabetSize; j++) {
+				for (int j = 0; j < mtfAlphabetSize; j++) {
 					sortedFrequencyMap[j] = (tableFrequencies[i][j] << 9) | j;
 				}
 				Arrays.sort (sortedFrequencyMap);
-				for (int j = 0; j < huffmanAlphabetSize; j++) {
+				for (int j = 0; j < mtfAlphabetSize; j++) {
 					sortedFrequencies[j] = sortedFrequencyMap[j] >>> 9;
 				}
 
 				HuffmanAllocator.allocateHuffmanCodeLengths (sortedFrequencies, BZip2Constants.HUFFMAN_ENCODE_MAXIMUM_CODE_LENGTH);
 
-				for (int j = 0; j < huffmanAlphabetSize; j++) {
+				for (int j = 0; j < mtfAlphabetSize; j++) {
 					huffmanCodeLengths[i][sortedFrequencyMap[j] & 0x1ff] = sortedFrequencies[j];
 				}
 
@@ -338,7 +232,7 @@ class BZip2HuffmanStageEncoder {
 
 		final int[][] huffmanMergedCodeSymbols = this.huffmanMergedCodeSymbols;
 		final int[][] huffmanCodeLengths = this.huffmanCodeLengths;
-		final int huffmanAlphabetSize = this.huffmanAlphabetSize;
+		final int mtfAlphabetSize = this.mtfAlphabetSize;
 
 		for (int i = 0; i < totalTables; i++) {
 
@@ -346,7 +240,7 @@ class BZip2HuffmanStageEncoder {
 
 			int minimumLength = 32;
 			int maximumLength = 0;
-			for (int j = 0; j < huffmanAlphabetSize; j++) {
+			for (int j = 0; j < mtfAlphabetSize; j++) {
 				final int length = tableLengths[j];
 				if (length > maximumLength) {
 					maximumLength = length;
@@ -358,7 +252,7 @@ class BZip2HuffmanStageEncoder {
 
 			int code = 0;
 			for (int j = minimumLength; j <= maximumLength; j++) {
-				for (int k = 0; k < huffmanAlphabetSize; k++) {
+				for (int k = 0; k < mtfAlphabetSize; k++) {
 					if ((huffmanCodeLengths[i][k] & 0xff) == j) {
 						huffmanMergedCodeSymbols[i][k] = (j << 24) | code;
 						code++;
@@ -367,40 +261,6 @@ class BZip2HuffmanStageEncoder {
 				code <<= 1;
 			}
 
-		}
-
-	}
-
-
-	/**
-	 * Write the Huffman symbol to output byte map
-	 * @throws IOException on any I/O error writing the data
-	 */
-	private void writeSymbolMap() throws IOException {
-
-		BitOutputStream bitOutputStream = this.bitOutputStream;
-
-		final boolean[] bwtValuesInUse = this.bwtValuesInUse;
-		final boolean[] condensedInUse = new boolean[16];
-
-		for (int i = 0; i < 16; i++) {
-			for (int j = 0, k = i << 4; j < 16; j++, k++) {
-				if (bwtValuesInUse[k]) {
-					condensedInUse[i] = true;
-				}
-			}
-		}
-
-		for (int i = 0; i < 16; i++) {
-			bitOutputStream.writeBoolean (condensedInUse[i]);
-		}
-
-		for (int i = 0; i < 16; i++) {
-			if (condensedInUse[i]) {
-				for (int j = 0, k = i * 16; j < 16; j++, k++) {
-					bitOutputStream.writeBoolean (bwtValuesInUse[k]);
-				}
-			}
 		}
 
 	}
@@ -438,7 +298,7 @@ class BZip2HuffmanStageEncoder {
 
 		final BitOutputStream bitOutputStream = this.bitOutputStream;
 		final int[][] huffmanCodeLengths = this.huffmanCodeLengths;
-		final int huffmanAlphabetSize = this.huffmanAlphabetSize;
+		final int mtfAlphabetSize = this.mtfAlphabetSize;
 
 		for (int i = 0; i < totalTables; i++) {
 			final int[] tableLengths = huffmanCodeLengths[i];
@@ -446,7 +306,7 @@ class BZip2HuffmanStageEncoder {
 
 			bitOutputStream.writeBits (5, currentLength);
 
-			for (int j = 0; j < huffmanAlphabetSize; j++) {
+			for (int j = 0; j < mtfAlphabetSize; j++) {
 				final int codeLength = tableLengths[j];
 				final int value = (currentLength < codeLength) ? 2 : 3;
 				int delta = Math.abs (codeLength - currentLength);
@@ -494,14 +354,12 @@ class BZip2HuffmanStageEncoder {
 	 */
 	public void encode() throws IOException {
 
-		moveToFrontAndRunLengthEncode();
-
 		final int totalTables = selectTableCount (this.mtfLength);
+
 		generateInitialHuffmanCodeLengths (totalTables);
 		final int totalSelectors = optimiseSelectorsAndHuffmanTables (totalTables);
 		assignHuffmanCodeSymbols (totalTables);
 
-		writeSymbolMap();
 		writeSelectors (totalTables, totalSelectors);
 		writeHuffmanCodeLengths (totalTables);
 		writeBlockData();
@@ -511,17 +369,18 @@ class BZip2HuffmanStageEncoder {
 
 	/**
 	 * @param bitOutputStream The BitOutputStream to write to
-	 * @param bwtValuesInUse The byte values that are actually present within the block
-	 * @param bwtBlock The Burrows Wheeler Transformed data
-	 * @param bwtLength The actual length of the BWT data
+	 * @param mtfBlock The MTF block data
+	 * @param mtfLength The actual length of the MTF block
+	 * @param mtfAlphabetSize The size of the MTF block's alphabet
+	 * @param mtfSymbolFrequencies The frequencies the MTF block's symbols
 	 */
-	public BZip2HuffmanStageEncoder (final BitOutputStream bitOutputStream, final boolean[] bwtValuesInUse, final int[] bwtBlock, final int bwtLength) {
+	public BZip2HuffmanStageEncoder (final BitOutputStream bitOutputStream, final char[] mtfBlock, final int mtfLength, final int mtfAlphabetSize, final int[] mtfSymbolFrequencies) {
 
 		this.bitOutputStream = bitOutputStream;
-		this.mtfBlock = new char[bwtLength + 1];
-		this.bwtValuesInUse = bwtValuesInUse;
-		this.bwtBlock = bwtBlock;
-		this.bwtLength = bwtLength;
+		this.mtfBlock = mtfBlock;
+		this.mtfLength = mtfLength;
+		this.mtfAlphabetSize = mtfAlphabetSize;
+		this.mtfSymbolFrequencies = mtfSymbolFrequencies;
 
 	}
 
