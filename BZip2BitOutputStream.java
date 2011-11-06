@@ -31,7 +31,7 @@ import java.io.OutputStream;
  * strings of arbitrary length (up to 24 bits), and bit aligned 32-bit integers. A single byte at a
  * time is written to the wrapped stream when sufficient bits have been accumulated
  */
-public class BitOutputStream {
+public class BZip2BitOutputStream {
 
 	/**
 	 * The stream to which bits are written
@@ -139,7 +139,7 @@ public class BitOutputStream {
 	/**
 	 * @param outputStream The OutputStream to wrap
 	 */
-	public BitOutputStream (final OutputStream outputStream) {
+	public BZip2BitOutputStream (final OutputStream outputStream) {
 
 		this.outputStream = outputStream;
 

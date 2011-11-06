@@ -41,7 +41,7 @@ public class BZip2OutputStream extends OutputStream {
 	/**
 	 * An OutputStream wrapper that provides bit-level writes
 	 */
-	private BitOutputStream bitOutputStream;
+	private BZip2BitOutputStream bitOutputStream;
 
 	/**
 	 * (@code true} if the compressed stream has been finished, otherwise {@code false}
@@ -71,11 +71,11 @@ public class BZip2OutputStream extends OutputStream {
 	public void write (final int value) throws IOException {
 
 		if (this.outputStream == null) {
-			throw new IOException ("Stream closed");
+			throw new BZip2Exception ("Stream closed");
 		}
 
 		if (this.streamFinished) {
-			throw new IOException ("Write beyond end of stream");
+			throw new BZip2Exception ("Write beyond end of stream");
 		}
 
 		if (!this.blockCompressor.write (value & 0xff)) {
@@ -94,11 +94,11 @@ public class BZip2OutputStream extends OutputStream {
 	public void write (final byte[] data, int offset, int length) throws IOException {
 
 		if (this.outputStream == null) {
-			throw new IOException ("Stream closed");
+			throw new BZip2Exception ("Stream closed");
 		}
 
 		if (this.streamFinished) {
-			throw new IOException ("Write beyond end of stream");
+			throw new BZip2Exception ("Write beyond end of stream");
 		}
 
 		int bytesWritten;
@@ -200,7 +200,7 @@ public class BZip2OutputStream extends OutputStream {
 
 		this.streamBlockSize = blockSizeMultiplier * 100000;
 		this.outputStream = outputStream;
-		this.bitOutputStream = new BitOutputStream (this.outputStream);
+		this.bitOutputStream = new BZip2BitOutputStream (this.outputStream);
 
 		this.bitOutputStream.writeBits (16, BZip2Constants.STREAM_START_MARKER_1);
 		this.bitOutputStream.writeBits (8,  BZip2Constants.STREAM_START_MARKER_2);

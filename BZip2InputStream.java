@@ -55,7 +55,7 @@ public class BZip2InputStream extends InputStream {
 	/**
 	 * An InputStream wrapper that provides bit-level reads
 	 */
-	private BitInputStream bitInputStream;
+	private BZip2BitInputStream bitInputStream;
 
 	/**
 	 * If {@code true}, the caller is assumed to have read away the stream's leading "BZ" identifier
@@ -165,7 +165,7 @@ public class BZip2InputStream extends InputStream {
 
 		/* If the stream has been explicitly closed, throw an exception */
 		if (this.bitInputStream == null) {
-			throw new IOException ("Stream closed");
+			throw new BZip2Exception ("Stream closed");
 		}
 
 		/* If we're already at the end of the stream, do nothing */
@@ -184,12 +184,12 @@ public class BZip2InputStream extends InputStream {
 					|| (marker2 != BZip2Constants.STREAM_START_MARKER_2)
 					|| (blockSize < 1) || (blockSize > 9))
 			{
-				throw new IOException ("Invalid BZip2 header");
+				throw new BZip2Exception ("Invalid BZip2 header");
 			}
 
 			this.streamBlockSize = blockSize * 100000;
 		} catch (IOException e) {
-			// If the stream header could not be parsed, stop trying to read more data
+			// If the stream header was not valid, stop trying to read more data
 			this.streamComplete = true;
 			throw e;
 		}
@@ -222,8 +222,8 @@ public class BZip2InputStream extends InputStream {
 		}
 
 		/* Read block-header or end-of-stream marker */
-		int marker1 = this.bitInputStream.readBits (24);
-		int marker2 = this.bitInputStream.readBits (24);
+		final int marker1 = this.bitInputStream.readBits (24);
+		final int marker2 = this.bitInputStream.readBits (24);
 
 		if (marker1 == BZip2Constants.BLOCK_HEADER_MARKER_1 && marker2 == BZip2Constants.BLOCK_HEADER_MARKER_2) {
 			// Initialise a new block
@@ -238,16 +238,16 @@ public class BZip2InputStream extends InputStream {
 		} else if (marker1 == BZip2Constants.STREAM_END_MARKER_1 && marker2 == BZip2Constants.STREAM_END_MARKER_2) {
 			// Read and verify the end-of-stream CRC
 			this.streamComplete = true;
-			int storedCombinedCRC = this.bitInputStream.readInteger();
+			final int storedCombinedCRC = this.bitInputStream.readInteger();
 			if (storedCombinedCRC != this.streamCRC) {
-				throw new IOException ("BZip2 stream CRC error");
+				throw new BZip2Exception ("BZip2 stream CRC error");
 			}
 			return false;
 		}
 
 		/* If what was read is not a valid block-header or end-of-stream marker, the stream is broken */
 		this.streamComplete = true;
-		throw new IOException ("BZip2 stream format error");
+		throw new BZip2Exception ("BZip2 stream format error");
 
 	}
 
@@ -264,7 +264,7 @@ public class BZip2InputStream extends InputStream {
 		}
 
 		this.inputStream = inputStream;
-		this.bitInputStream = new BitInputStream (inputStream);
+		this.bitInputStream = new BZip2BitInputStream (inputStream);
 		this.headerless = headerless;
 
 	}

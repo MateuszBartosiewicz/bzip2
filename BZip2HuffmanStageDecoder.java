@@ -31,9 +31,9 @@ import java.io.IOException;
 public class BZip2HuffmanStageDecoder {
 
 	/**
-	 * The BitInputStream from which Huffman codes are read
+	 * The BZip2BitInputStream from which Huffman codes are read
 	 */
-	private final BitInputStream bitInputStream;
+	private final BZip2BitInputStream bitInputStream;
 
 	/**
 	 * The Huffman table number to use for each group of 50 symbols
@@ -143,13 +143,13 @@ public class BZip2HuffmanStageDecoder {
 	 */
 	public int nextSymbol() throws IOException {
 
-		final BitInputStream bitInputStream = this.bitInputStream;
+		final BZip2BitInputStream bitInputStream = this.bitInputStream;
 
 		// Move to next group selector if required
 		if (((++this.groupPosition % BZip2Constants.HUFFMAN_GROUP_RUN_LENGTH) == 0)) {
 			this.groupIndex++;
 			if (this.groupIndex == this.selectors.length) {
-				throw new IOException ("Error decoding BZip2 block");
+				throw new BZip2Exception ("Error decoding BZip2 block");
 			}
 			this.currentTable = this.selectors[this.groupIndex] & 0xff;
 		}
@@ -169,18 +169,19 @@ public class BZip2HuffmanStageDecoder {
 			codeBits = (codeBits << 1) | bitInputStream.readBits (1);
 		}
 
-		throw new IOException ("Error decoding BZip2 block");
+		// A valid code was not recognised
+		throw new BZip2Exception ("Error decoding BZip2 block");
 
 	}
 
 
 	/**
-	 * @param bitInputStream The BitInputStream from which Huffman codes are read
+	 * @param bitInputStream The BZip2BitInputStream from which Huffman codes are read
 	 * @param alphabetSize The total number of codes (uniform for each table)
 	 * @param tableCodeLengths The Canonical Huffman code lengths for each table
 	 * @param selectors The Huffman table number to use for each group of 50 symbols
 	 */
-	public BZip2HuffmanStageDecoder (final BitInputStream bitInputStream, final int alphabetSize, final byte[][] tableCodeLengths, final byte[] selectors) {
+	public BZip2HuffmanStageDecoder (final BZip2BitInputStream bitInputStream, final int alphabetSize, final byte[][] tableCodeLengths, final byte[] selectors) {
 
 		this.bitInputStream = bitInputStream;
 		this.selectors = selectors;

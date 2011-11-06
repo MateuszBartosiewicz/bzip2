@@ -31,7 +31,7 @@ import java.io.InputStream;
  * strings of arbitrary length (up to 24 bits), and bit aligned 32-bit integers. A single byte at a
  * time is read from the wrapped stream when more bits are required</p>
  */
-public class BitInputStream {
+public class BZip2BitInputStream {
 
 	/**
 	 * The stream from which bits are read
@@ -65,7 +65,7 @@ public class BitInputStream {
 			int byteRead = this.inputStream.read();
 
 			if (byteRead < 0) {
-				throw new IOException ("Unexpected end of stream");
+				throw new BZip2Exception ("Insufficient data");
 			}
 
 			bitBuffer = (bitBuffer << 8) | byteRead;
@@ -97,7 +97,7 @@ public class BitInputStream {
 				int byteRead = this.inputStream.read();
 
 				if (byteRead < 0) {
-					throw new IOException ("Unexpected end of stream");
+					throw new BZip2Exception ("Insufficient data");
 				}
 
 				bitBuffer = (bitBuffer << 8) | byteRead;
@@ -131,7 +131,7 @@ public class BitInputStream {
 				int byteRead = this.inputStream.read();
 
 				if (byteRead < 0) {
-					throw new IOException ("Unexpected end of stream");
+					throw new BZip2Exception ("Insufficient data");
 				}
 
 				bitBuffer = (bitBuffer << 8) | byteRead;
@@ -164,7 +164,7 @@ public class BitInputStream {
 	/**
 	 * @param inputStream The InputStream to wrap
 	 */
-	public BitInputStream (final InputStream inputStream) {
+	public BZip2BitInputStream (final InputStream inputStream) {
 
 		this.inputStream = inputStream;
 

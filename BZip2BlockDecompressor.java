@@ -88,7 +88,7 @@ public class BZip2BlockDecompressor {
 	/**
 	 * Provides bits of input to decode
 	 */
-	private final BitInputStream bitInputStream;
+	private final BZip2BitInputStream bitInputStream;
 
 	/**
 	 * Calculates the block CRC from the fully decoded bytes of the block
@@ -200,7 +200,7 @@ public class BZip2BlockDecompressor {
 	 */
 	private BZip2HuffmanStageDecoder readHuffmanTables() throws IOException {
 
-		final BitInputStream bitInputStream = this.bitInputStream;
+		final BZip2BitInputStream bitInputStream = this.bitInputStream;
 		final byte[] huffmanSymbolMap = this.huffmanSymbolMap;
 		final byte[][] tableCodeLengths = new byte[BZip2Constants.HUFFMAN_MAXIMUM_TABLES][BZip2Constants.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
 
@@ -230,7 +230,7 @@ public class BZip2BlockDecompressor {
 				|| (totalSelectors > BZip2Constants.HUFFMAN_MAXIMUM_SELECTORS)
 		   )
 		{
-			throw new IOException ("BZip2 block Huffman tables invalid");
+			throw new BZip2Exception ("BZip2 block Huffman tables invalid");
 		}
 
 		/* Read and decode MTFed Huffman selector list */
@@ -287,7 +287,7 @@ public class BZip2BlockDecompressor {
 			} else {
 				if (repeatCount > 0) {
 					if (bwtBlockLength + repeatCount > streamBlockSize) {
-						throw new IOException ("BZip2 block exceeds declared block size");
+						throw new BZip2Exception ("BZip2 block exceeds declared block size");
 					}
 					final byte nextByte = huffmanSymbolMap[mtfValue];
 					bwtByteCounts[nextByte & 0xff] += repeatCount;
@@ -303,7 +303,7 @@ public class BZip2BlockDecompressor {
 					break;
 
 				if (bwtBlockLength >= streamBlockSize) {
-					throw new IOException ("BZip2 block exceeds declared block size");
+					throw new BZip2Exception ("BZip2 block exceeds declared block size");
 				}
 
 				mtfValue = symbolMTF.indexToFront (nextSymbol - 1) & 0xff;
@@ -332,7 +332,7 @@ public class BZip2BlockDecompressor {
 		final int[] characterBase = new int[256];
 
 		if ((bwtStartPointer < 0) || (bwtStartPointer >= this.bwtBlockLength)) {
-			throw new IOException ("BZip2 start pointer invalid");
+			throw new BZip2Exception ("BZip2 start pointer invalid");
 		}
 
 		// Cumulatise character counts
@@ -458,7 +458,7 @@ public class BZip2BlockDecompressor {
 	public int checkCRC() throws IOException {
 
 		if (this.blockCRC != this.crc.getCRC()) {
-			throw new IOException ("BZip2 block CRC error");
+			throw new BZip2Exception ("BZip2 block CRC error");
 		}
 
 		return this.crc.getCRC();
@@ -467,19 +467,21 @@ public class BZip2BlockDecompressor {
 
 
 	/**
-	 * @param bitInputStream The BitInputStream to read from
+	 * @param bitInputStream The BZip2BitInputStream to read from
 	 * @param blockSize The maximum decoded size of the block
 	 * @throws IOException If the block could not be decoded
 	 */
-	public BZip2BlockDecompressor (final BitInputStream bitInputStream, final int blockSize) throws IOException {
+	public BZip2BlockDecompressor (final BZip2BitInputStream bitInputStream, final int blockSize) throws IOException {
 
 		this.bitInputStream = bitInputStream;
 		this.bwtBlock = new byte[blockSize];
 
+		final int bwtStartPointer;
+
 		// Read block header
 		this.blockCRC = this.bitInputStream.readInteger();
 		this.blockRandomised = this.bitInputStream.readBoolean();
-		int bwtStartPointer = this.bitInputStream.readBits (24);
+		bwtStartPointer = this.bitInputStream.readBits (24);
 
 		// Read block data and decode through to the Inverse Burrows Wheeler Transform stage
 		BZip2HuffmanStageDecoder huffmanDecoder = readHuffmanTables();

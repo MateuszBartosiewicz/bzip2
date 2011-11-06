@@ -43,7 +43,7 @@ public class BZip2BlockCompressor {
 	/**
 	 * The stream to which compressed BZip2 data is written
 	 */
-	private final BitOutputStream bitOutputStream;
+	private final BZip2BitOutputStream bitOutputStream;
 
 	/**
 	 * CRC builder for the block
@@ -93,7 +93,7 @@ public class BZip2BlockCompressor {
 	 */
 	private void writeSymbolMap() throws IOException {
 
-		BitOutputStream bitOutputStream = this.bitOutputStream;
+		BZip2BitOutputStream bitOutputStream = this.bitOutputStream;
 
 		final boolean[] blockValuesPresent = this.blockValuesPresent;
 		final boolean[] condensedInUse = new boolean[16];
@@ -292,11 +292,11 @@ public class BZip2BlockCompressor {
 
 
 	/**
-	 * @param bitOutputStream The stream to which compressed BZip2 data is written
+	 * @param bitOutputStream The BZip2BitOutputStream to which compressed BZip2 data is written
 	 * @param blockSize The declared block size in bytes. Up to this many bytes will be accepted
 	 *                  into the block after Run-Length Encoding is applied
 	 */
-	public BZip2BlockCompressor (final BitOutputStream bitOutputStream, final int blockSize) {
+	public BZip2BlockCompressor (final BZip2BitOutputStream bitOutputStream, final int blockSize) {
 
 		this.bitOutputStream = bitOutputStream;
 

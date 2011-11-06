@@ -37,9 +37,9 @@ class BZip2HuffmanStageEncoder {
 	private static final int HUFFMAN_HIGH_SYMBOL_COST = 15;
 
 	/**
-	 * The BitOutputStream from which Huffman codes are written
+	 * The BZip2BitOutputStream to which the Huffman tables and data is written
 	 */
-	private final BitOutputStream bitOutputStream;
+	private final BZip2BitOutputStream bitOutputStream;
 
 	/**
 	 * The output of the Move To Front Transform and Run Length Encoding[2] stages
@@ -274,7 +274,7 @@ class BZip2HuffmanStageEncoder {
 	 */
 	private void writeSelectors (final int totaTables, final int totalSelectors) throws IOException {
 
-		final BitOutputStream bitOutputStream = this.bitOutputStream;
+		final BZip2BitOutputStream bitOutputStream = this.bitOutputStream;
 		final byte[] selectors = this.selectors;
 
 		bitOutputStream.writeBits (3, totaTables);
@@ -296,7 +296,7 @@ class BZip2HuffmanStageEncoder {
 	 */
 	private void writeHuffmanCodeLengths (final int totalTables) throws IOException {
 
-		final BitOutputStream bitOutputStream = this.bitOutputStream;
+		final BZip2BitOutputStream bitOutputStream = this.bitOutputStream;
 		final int[][] huffmanCodeLengths = this.huffmanCodeLengths;
 		final int mtfAlphabetSize = this.mtfAlphabetSize;
 
@@ -327,7 +327,7 @@ class BZip2HuffmanStageEncoder {
 	 */
 	private void writeBlockData() throws IOException {
 
-		final BitOutputStream bitOutputStream = this.bitOutputStream;
+		final BZip2BitOutputStream bitOutputStream = this.bitOutputStream;
 		final int[][] huffmanMergedCodeSymbols = this.huffmanMergedCodeSymbols;
 		final byte[] selectors = this.selectors;
 		final char[] mtf = this.mtfBlock;
@@ -368,13 +368,13 @@ class BZip2HuffmanStageEncoder {
 
 
 	/**
-	 * @param bitOutputStream The BitOutputStream to write to
+	 * @param bitOutputStream The BZip2BitOutputStream to write to
 	 * @param mtfBlock The MTF block data
 	 * @param mtfLength The actual length of the MTF block
 	 * @param mtfAlphabetSize The size of the MTF block's alphabet
 	 * @param mtfSymbolFrequencies The frequencies the MTF block's symbols
 	 */
-	public BZip2HuffmanStageEncoder (final BitOutputStream bitOutputStream, final char[] mtfBlock, final int mtfLength, final int mtfAlphabetSize, final int[] mtfSymbolFrequencies) {
+	public BZip2HuffmanStageEncoder (final BZip2BitOutputStream bitOutputStream, final char[] mtfBlock, final int mtfLength, final int mtfAlphabetSize, final int[] mtfSymbolFrequencies) {
 
 		this.bitOutputStream = bitOutputStream;
 		this.mtfBlock = mtfBlock;
